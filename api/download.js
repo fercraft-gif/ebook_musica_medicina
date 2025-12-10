@@ -33,17 +33,18 @@ export default async function handler(req, res) {
       });
     }
 
-    // 1) Busca o pedido mais recente do usuário (ou um específico, se orderId vier)
+    // 1) Busca o pedido do usuário (ou um específico, se orderId vier)
     let query = supabaseAdmin
       .from('ebook_order')
-      .select('id, status, download_allowed, mp_status, created_at')
+      .select('id, status, download_allowed, mp_status')
       .eq('email', email.trim());
 
     if (orderId) {
       query = query.eq('id', orderId.trim());
     }
 
-    query = query.order('created_at', { ascending: false }).limit(1);
+    // como não temos created_at, apenas limitamos a 1 registro
+    query = query.limit(1);
 
     const { data, error } = await query;
 
