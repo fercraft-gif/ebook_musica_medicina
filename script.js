@@ -50,7 +50,13 @@ function iniciarCheckout() {
   const buyerEmailInput = document.getElementById("buyer-email");
   const modalMessage = document.getElementById("modal-message");
 
+  // Botão de submit do formulário
+  const submitBtn = checkoutForm
+    ? checkoutForm.querySelector('button[type="submit"]')
+    : null;
+
   let currentPaymentMethod = null;
+  let isSubmitting = false; // trava contra clique duplo
 
   // Abre modal
   function openModal(method) {
@@ -58,6 +64,11 @@ function iniciarCheckout() {
     modal.classList.remove("hidden");
     modalMessage.textContent = "";
     checkoutForm.reset();
+    isSubmitting = false;
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Continuar para pagamento seguro";
+    }
   }
 
   // Fecha modal
@@ -83,6 +94,11 @@ function iniciarCheckout() {
   checkoutForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    if (isSubmitting) {
+      // já está processando, ignora novo clique
+      return;
+    }
+
     const name = buyerNameInput.value.trim();
     const email = buyerEmailInput.value.trim();
 
@@ -96,7 +112,13 @@ function iniciarCheckout() {
       return;
     }
 
+    isSubmitting = true;
     modalMessage.textContent = "Iniciando pagamento seguro...";
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Processando...";
+    }
 
     try {
       const response = await fetch("/api/create-checkout", {
@@ -116,10 +138,15 @@ function iniciarCheckout() {
         modalMessage.textContent =
           result.error ||
           "Erro ao iniciar o pagamento. Tente novamente em alguns instantes.";
+        isSubmitting = false;
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Continuar para pagamento seguro";
+        }
         return;
       }
 
-      // Guarda e-mail para página obrigado.html
+      // Guarda e-mail para página obrigado.html (se quiser usar no futuro)
       try {
         localStorage.setItem("buyer_email", email);
       } catch {}
@@ -127,6 +154,11 @@ function iniciarCheckout() {
       if (!result.initPoint) {
         modalMessage.textContent =
           "Erro inesperado ao gerar pagamento. Tente novamente.";
+        isSubmitting = false;
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Continuar para pagamento seguro";
+        }
         return;
       }
 
@@ -136,6 +168,11 @@ function iniciarCheckout() {
       console.error(err);
       modalMessage.textContent =
         "Falha ao conectar. Verifique sua internet e tente novamente.";
+      isSubmitting = false;
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Continuar para pagamento seguro";
+      }
     }
   });
 }
