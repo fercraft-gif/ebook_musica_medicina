@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Download · E-book Música & Ansiedade</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Área de download do e-book Música & Ansiedade — acesse seu PDF usando o e-mail da compra."
+    />
+
+    <!-- Fontes modernas (opcional, igual ao index.html) -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Tight:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Seu CSS principal -->
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body class="page download-page">
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="/" class="brand">
+          <span class="brand-tagline">Série Música &amp; Medicina</span>
+          <span class="brand-title">Música &amp; Ansiedade</span>
+        </a>
+      </div>
+    </header>
+
+    <main class="download-main">
+      <section class="download-section">
+        <div class="download-container">
+          <h1 class="download-title">Baixar seu e-book</h1>
+          <p class="download-subtitle">
+            Use o <strong>e-mail que você usou na compra</strong> para liberar o
+            download do PDF. Se o pagamento já foi aprovado, o link é gerado na
+            hora.
+          </p>
+
+          <form id="download-form" class="download-form">
+            <label class="form-label" for="email">
+              E-mail usado na compra
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              autocomplete="email"
+              placeholder="seuemail@exemplo.com"
+              class="form-input"
+            />
+
+            <label class="form-label" for="orderId">
+              ID do pedido (opcional)
+            </label>
+            <input
+              id="orderId"
+              name="orderId"
+              type="text"
+              placeholder="Cole aqui se você tiver o ID do pedido"
+              class="form-input"
+            />
+
+            <button id="download-button" type="submit" class="btn btn-primary">
+              Verificar e liberar download
+            </button>
+          </form>
+
+          <div id="download-status" class="download-status" aria-live="polite"></div>
+
+          <div id="download-link-wrapper" class="download-link-wrapper hidden">
+            <p class="download-ready-text">
+              ✅ Seu download está liberado! Se não abriu automaticamente,
+              clique no botão abaixo:
+            </p>
+            <a
+              id="download-link"
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn btn-secondary"
+            >
+              Abrir e-book em nova aba
+            </a>
+
+            <p id="bonus-wrapper" class="bonus-wrapper hidden">
+              <a
+                id="bonus-link"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="bonus-link"
+              >
+                📎 Acessar material bônus
+              </a>
+            </p>
+          </div>
+
+          <p class="download-help-text">
+            Se o sistema indicar que o pagamento ainda não foi confirmado,
+            aguarde alguns minutos e tente novamente. Qualquer problema, fale
+            comigo pelo WhatsApp.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p class="footer-text">
+          © <span id="year"></span> Música &amp; Ansiedade · Série Música &amp;
+          Medicina · Octopus Axis
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      // Atualiza ano no rodapé
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      const form = document.getElementById('download-form');
+      const statusEl = document.getElementById('download-status');
+      const button = document.getElementById('download-button');
+      const linkWrapper = document.getElementById('download-link-wrapper');
+      const downloadLink = document.getElementById('download-link');
+      const bonusWrapper = document.getElementById('bonus-wrapper');
+      const bonusLink = document.getElementById('bonus-link');
+
+      function setStatus(message, type) {
+        statusEl.textContent = message || '';
+        statusEl.classList.remove('status-error', 'status-success', 'status-info');
+
+        if (!message) return;
+
+        if (type === 'error') {
+          statusEl.classList.add('status-error');
+        } else if (type === 'success') {
+          statusEl.classList.add('status-success');
+        } else {
+          statusEl.classList.add('status-info');
+        }
+      }
+
+      function setLoading(isLoading) {
+        if (isLoading) {
+          button.disabled = true;
+          button.textContent = 'Verificando...';
+        } else {
+          button.disabled = false;
+          button.textContent = 'Verificar e liberar download';
+        }
+      }
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        setLoading(true);
+        setStatus('Verificando seu pedido…', 'info');
+        linkWrapper.classList.add('hidden');
+        bonusWrapper.classList.add('hidden');
+
+        const email = document.getElementById('email').value.trim();
+        const orderId = document.getElementById('orderId').value.trim();
+
+        if (!email) {
+          setStatus('Por favor, preencha o e-mail usado na compra.', 'error');
+          setLoading(false);
+          return;
+        }
+
+        try {
+          const params = new URLSearchParams();
+          params.set('email', email);
+          if (orderId) params.set('orderId', orderId);
+
+          const response = await fetch('/api/download?' + params.toString(), {
+            method: 'GET',
+          });
+
+          if (!response.ok) {
+            setStatus(
+              'Erro ao verificar seu pedido. Tente novamente em alguns instantes.',
+              'error'
+            );
+            setLoading(false);
+            return;
+          }
+
+          const data = await response.json();
+
+          if (!data.found) {
+            setStatus(
+              'Não encontrei nenhum pedido para este e-mail. Verifique se digitou corretamente.',
+              'error'
+            );
+            setLoading(false);
+            return;
+          }
+
+          if (!data.allowed || !data.ebookUrl) {
+            const statusTexto = data.status || data.mpStatus || 'pendente';
+            setStatus(
+              'Seu pagamento ainda não foi confirmado (status: ' +
+                statusTexto +
+                '). Assim que for aprovado, o download será liberado.',
+              'info'
+            );
+            setLoading(false);
+            return;
+          }
+
+          // Tudo certo: download liberado
+          setStatus(
+            'Download liberado! O e-book deve abrir em uma nova aba. Se não abrir, use o botão abaixo.',
+            'success'
+          );
+
+          downloadLink.href = data.ebookUrl;
+          linkWrapper.classList.remove('hidden');
+
+          if (data.bonusUrl) {
+            bonusLink.href = data.bonusUrl;
+            bonusWrapper.classList.remove('hidden');
+          }
+
+          // Redireciona automaticamente para o PDF
+          window.location.href = data.ebookUrl;
+        } catch (error) {
+          console.error('Erro ao chamar /api/download:', error);
+          setStatus(
+            'Ocorreu um erro inesperado ao tentar liberar seu download. Tente novamente em alguns minutos.',
+            'error'
+          );
+        } finally {
+          setLoading(false);
+        }
+      });
+    </script>
+  </body>
+</html>

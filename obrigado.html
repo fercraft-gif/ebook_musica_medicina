@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Obrigada · Música & Ansiedade</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Obrigada pela compra do e-book Música & Ansiedade."
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .thankyou-hero {
+        min-height: 70vh;
+        display: flex;
+        align-items: center;
+      }
+      .thankyou-card {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2.5rem 2rem;
+        border-radius: 1.5rem;
+        background: radial-gradient(circle at top left, #16343f, #020617);
+        box-shadow: 0 22px 45px rgba(0, 0, 0, 0.6);
+        color: #e5e7eb;
+      }
+      .thankyou-title {
+        font-size: clamp(1.8rem, 3vw, 2.3rem);
+        margin-bottom: 0.75rem;
+      }
+      .thankyou-email {
+        font-weight: 600;
+        color: #a7f3d0;
+      }
+      .thankyou-actions {
+        margin-top: 2rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+      .thankyou-note {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-top: 1.25rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <div class="logo-block">
+          <div class="logo-mark">OA</div>
+          <div class="logo-text">
+            <span class="logo-small">Octopus Axis E-books</span>
+            <span class="logo-sub">Série Música &amp; Medicina</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="thankyou-hero">
+      <div class="container">
+        <div class="thankyou-card">
+          <p class="pill">Compra concluída · Música &amp; Ansiedade</p>
+          <h1 class="thankyou-title">Obrigada por confiar no meu trabalho.</h1>
+          <p>
+            Assim que o pagamento for confirmado pelo sistema, o link seguro
+            para download do e-book será enviado para:
+          </p>
+          <p class="thankyou-email" id="buyer-email-display">
+            seu e-mail cadastrado
+          </p>
+
+          <p>
+            Se o e-mail não aparecer em alguns minutos, lembre-se de verificar
+            também a pasta de spam / promoções.
+          </p>
+
+          <div class="thankyou-actions">
+            <a href="download.html" class="btn btn-primary">
+              IR PARA A PÁGINA DE DOWNLOAD
+            </a>
+            <a href="index.html" class="btn btn-outline">
+              VOLTAR PARA A PÁGINA INICIAL
+            </a>
+          </div>
+
+          <p class="thankyou-note">
+            Dica: se você digitou o e-mail errado sem querer, me escreva em
+            <strong>Mmt.fernandazaguini@gmail.com</strong> com o comprovante de
+            pagamento para que eu possa te ajudar.
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>© 2025 Octopus Axis — Música &amp; Medicina.</p>
+      </div>
+    </footer>
+
+    <script>
+      // Recupera o e-mail salvo no checkout do index.html
+      const emailSpan = document.getElementById("buyer-email-display");
+      try {
+        const email = localStorage.getItem("buyer_email");
+        if (email) {
+          emailSpan.textContent = email;
+        }
+      } catch {}
+    </script>
+  </body>
+</html>

@@ -1,0 +1,648 @@
+/* ---------------------------------------
+   RESET & BASE
+--------------------------------------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  font-family: "Inter", "Inter Tight", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  color: #184047; /* texto principal */
+  background: #f5faf9; /* fundo geral bem claro */
+  line-height: 1.6;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+ul {
+  list-style: none;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Container padrão */
+.container {
+  width: 90%;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+/* ---------------------------------------
+   HEADER
+--------------------------------------- */
+.site-header {
+  background: rgba(245, 250, 249, 0.96);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 0;
+}
+
+.logo-block {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 1.25rem;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #fdfdfd;
+  background: linear-gradient(135deg, #195261, #26a5a6);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.8rem;
+}
+
+.logo-small {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #6a8a8f;
+  font-weight: 500;
+}
+
+.logo-sub {
+  font-weight: 600;
+  color: #184047;
+}
+
+.main-nav {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.main-nav a {
+  color: #45747b;
+  font-weight: 500;
+  position: relative;
+}
+
+.main-nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -0.25rem;
+  width: 0;
+  height: 2px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #1c7f80, #f6b562);
+  transition: width 0.18s ease-out;
+}
+
+.main-nav a:hover::after {
+  width: 100%;
+}
+
+/* ---------------------------------------
+   HERO
+--------------------------------------- */
+.hero {
+  padding: 4.5rem 0 3.5rem;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.9fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+/* Texto principal */
+.hero-text {
+  max-width: 620px;
+}
+
+.pill {
+  display: inline-block;
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #5e8a92;
+  font-weight: 600;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  background: #e2f4f2;
+  border: 1px solid #c5e0dd;
+  margin-bottom: 1.2rem;
+}
+
+.hero-title {
+  font-family: "Inter Tight", "Inter", sans-serif;
+  font-size: 3rem;
+  line-height: 1.1;
+  color: #163641;
+  margin-bottom: 1.2rem;
+}
+
+.hero-subtitle {
+  font-size: 0.98rem;
+  color: #526f74;
+  margin-bottom: 1rem;
+}
+
+.hero-tagline {
+  font-size: 0.95rem;
+  color: #6d8a8e;
+  margin-bottom: 1.8rem;
+}
+
+/* Bloco de preço */
+.price-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  padding: 1.75rem 2rem;
+  border-radius: 1.35rem;
+  background: linear-gradient(145deg, #e2f3f6, #f4f7f2);
+  box-shadow: 0 20px 40px rgba(35, 86, 97, 0.20);
+}
+
+.price-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #79979b;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.price-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #174754;
+}
+
+.price-small {
+  font-size: 0.82rem;
+  color: #6f8c90;
+}
+
+/* Botões do bloco de preço */
+.cta-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+/* Botões base */
+.btn {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.75rem 1.6rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #1c7f80, #19506a);
+  color: #fdfdfd;
+  box-shadow: 0 14px 28px rgba(22, 109, 120, 0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 30px rgba(22, 109, 120, 0.5);
+}
+
+.btn-outline {
+  background: #f5faf9;
+  color: #19506a;
+  border-color: #bedfe0;
+}
+
+.btn-outline:hover {
+  background: #e7f4f4;
+  box-shadow: 0 10px 20px rgba(79, 120, 126, 0.25);
+}
+
+.btn-small {
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+/* Aviso abaixo do bloco */
+.hero-notice {
+  margin-top: 1.1rem;
+  font-size: 0.82rem;
+  color: #7c9598;
+}
+
+/* ---------------------------------------
+   CAPA DO LIVRO
+--------------------------------------- */
+.hero-cover {
+  display: flex;
+  justify-content: center;
+}
+
+.cover-card {
+  position: relative;
+  border-radius: 1.8rem;
+  padding: 1.9rem 1.9rem 2.3rem;
+  background: radial-gradient(circle at top left, #fdf7eb 0%, #f3f5f5 55%, #e1f2f2 100%);
+  box-shadow: 0 32px 70px rgba(58, 85, 88, 0.45);
+}
+
+.cover-image {
+  border-radius: 0.9rem;
+  width: 260px;
+}
+
+/* luz suave atrás do livro */
+.cover-gradient {
+  position: absolute;
+  inset: 8%;
+  border-radius: 2rem;
+  background: radial-gradient(circle at 20% 0%, rgba(244, 215, 150, 0.7), transparent 60%),
+    radial-gradient(circle at 80% 80%, rgba(183, 234, 219, 0.9), transparent 65%);
+  opacity: 0.7;
+  z-index: -1;
+}
+
+/* ---------------------------------------
+   SEÇÕES GENÉRICAS
+--------------------------------------- */
+.section {
+  padding: 4rem 0;
+}
+
+.section-alt {
+  padding: 4rem 0;
+  background: #f0f6f5;
+}
+
+.section-title {
+  font-family: "Inter Tight", "Inter", sans-serif;
+  font-size: 2rem;
+  color: #184047;
+  margin-bottom: 1rem;
+}
+
+.section-title.small {
+  font-size: 1.5rem;
+}
+
+.section-intro {
+  max-width: 640px;
+  font-size: 0.98rem;
+  color: #607f84;
+  margin-bottom: 2rem;
+}
+
+/* ---------------------------------------
+   CARDS DE BENEFÍCIOS
+--------------------------------------- */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1.5rem;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 1.1rem;
+  padding: 1.4rem 1.5rem;
+  box-shadow: 0 16px 30px rgba(123, 151, 151, 0.18);
+  border: 1px solid rgba(196, 216, 215, 0.9);
+}
+
+.card h3 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: #184047;
+}
+
+.card p {
+  font-size: 0.9rem;
+  color: #627f84;
+}
+
+/* ---------------------------------------
+   SPLIT / COLUNAS
+--------------------------------------- */
+.split {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 2.5rem;
+  align-items: flex-start;
+}
+
+.feature-list li {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 0.65rem;
+  font-size: 0.9rem;
+  color: #5f7c81;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  margin-top: 0.45rem;
+  background: linear-gradient(135deg, #1c7f80, #f7b861);
+}
+
+.info-box {
+  background: #ffffff;
+  border-radius: 1.2rem;
+  padding: 1.5rem 1.7rem;
+  border: 1px solid rgba(190, 212, 211, 0.9);
+  box-shadow: 0 20px 40px rgba(120, 154, 151, 0.2);
+}
+
+.info-box h3 {
+  font-size: 1.05rem;
+  margin-bottom: 0.7rem;
+}
+
+.info-box ul {
+  font-size: 0.9rem;
+  color: #5f7d82;
+  margin-bottom: 0.75rem;
+}
+
+.info-box li + li {
+  margin-top: 0.35rem;
+}
+
+.info-note {
+  font-size: 0.85rem;
+  color: #799598;
+}
+
+/* ---------------------------------------
+   PARA QUEM É
+--------------------------------------- */
+.tag-list li {
+  font-size: 0.9rem;
+  color: #5f7f83;
+  margin-bottom: 0.4rem;
+}
+
+.text-block {
+  font-size: 0.92rem;
+  color: #607f84;
+}
+
+/* ---------------------------------------
+   PASSO A PASSO COMPRA
+--------------------------------------- */
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1.5rem;
+}
+
+.step {
+  background: #ffffff;
+  border-radius: 1.1rem;
+  padding: 1.4rem 1.5rem 1.6rem;
+  border: 1px solid rgba(190, 212, 211, 0.9);
+  box-shadow: 0 16px 30px rgba(120, 152, 152, 0.16);
+}
+
+.step-number {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #1c7f80, #f7b861);
+  color: #fdfdfd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+}
+
+.step h3 {
+  font-size: 1rem;
+  margin-bottom: 0.4rem;
+  color: #184047;
+}
+
+.step p {
+  font-size: 0.88rem;
+  color: #607f84;
+}
+
+.cta-center {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+/* ---------------------------------------
+   DEPOIMENTOS & GARANTIA
+--------------------------------------- */
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.9fr);
+  gap: 2.5rem;
+}
+
+.testimonial-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.testimonial-list blockquote {
+  background: #ffffff;
+  border-radius: 1.1rem;
+  padding: 1rem 1.25rem;
+  font-size: 0.9rem;
+  color: #4f6f74;
+  border: 1px solid rgba(190, 212, 211, 0.9);
+  box-shadow: 0 16px 30px rgba(120, 152, 152, 0.16);
+}
+
+.guarantee-box {
+  background: #fdfdfb;
+  border-radius: 1.3rem;
+  padding: 1.6rem 1.8rem;
+  border: 1px solid rgba(243, 205, 150, 0.9);
+  box-shadow: 0 20px 40px rgba(211, 174, 120, 0.25);
+}
+
+.guarantee-note {
+  font-size: 0.86rem;
+  color: #896b3f;
+  margin-top: 0.6rem;
+}
+
+/* ---------------------------------------
+   SOBRE A AUTORA
+--------------------------------------- */
+.about-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.about-photo-wrap {
+  border-radius: 1.6rem;
+  padding: 0.55rem;
+  background: linear-gradient(135deg, #e9f3f2, #fce8c7);
+  box-shadow: 0 26px 50px rgba(112, 137, 135, 0.35);
+}
+
+.about-photo-wrap img {
+  border-radius: 1.3rem;
+}
+
+.about-text p {
+  font-size: 0.95rem;
+  color: #5f7e83;
+  margin-bottom: 0.8rem;
+}
+
+/* ---------------------------------------
+   FAQ
+--------------------------------------- */
+.faq-list {
+  max-width: 720px;
+}
+
+details {
+  background: #ffffff;
+  border-radius: 1rem;
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 0.7rem;
+  border: 1px solid rgba(191, 213, 212, 0.9);
+  box-shadow: 0 10px 22px rgba(139, 165, 163, 0.18);
+}
+
+summary {
+  list-style: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #184047;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+details[open] summary {
+  margin-bottom: 0.35rem;
+}
+
+details p {
+  font-size: 0.87rem;
+  color: #607f84;
+}
+
+/* ---------------------------------------
+   CTA FINAL
+--------------------------------------- */
+.final-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+/* ---------------------------------------
+   FOOTER
+--------------------------------------- */
+.site-footer {
+  padding: 2.5rem 0 2rem;
+  background: #f2f7f5;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: #708c90;
+}
+
+/* ---------------------------------------
+   RESPONSIVO
+--------------------------------------- */
+@media (max-width: 960px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-cover {
+    order: -1;
+    margin-bottom: 2rem;
+  }
+
+  .price-box {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .final-cta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .testimonials-grid,
+  .about-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .main-nav {
+    display: none; /* se quiser, depois fazemos menu mobile */
+  }
+}
+
+@media (max-width: 640px) {
+  .hero {
+    padding-top: 3rem;
+  }
+
+  .hero-title {
+    font-size: 2.4rem;
+  }
+
+  .price-box {
+    padding: 1.4rem 1.5rem;
+  }
+
+  .cover-card {
+    padding: 1.4rem 1.4rem 1.8rem;
+  }
+}

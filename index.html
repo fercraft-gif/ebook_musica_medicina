@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Música & Ansiedade · Série Música & Medicina</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="E-book Música & Ansiedade — um guia simples, sensível e direto para usar a música a favor da sua mente." />
+
+  <!-- Fontes modernas -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Tight:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Seu CSS principal -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- ESTILO BÁSICO DO MODAL (se quiser pode mover para o styles.css depois) -->
+  <style>
+    .checkout-modal {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 999;
+    }
+    .checkout-modal.hidden {
+      display: none;
+    }
+    .checkout-modal-inner {
+      position: relative;
+      max-width: 480px;
+      width: 92%;
+      background: #071820;
+      color: #f9fafb;
+      padding: 2rem 2.25rem;
+      border-radius: 1.25rem;
+      box-shadow: 0 22px 45px rgba(0, 0, 0, 0.6);
+    }
+    .checkout-modal-inner h2 {
+      margin-top: 0;
+      margin-bottom: 0.75rem;
+    }
+    .checkout-modal-inner p {
+      margin-bottom: 1rem;
+    }
+    .modal-close {
+      position: absolute;
+      top: 0.9rem;
+      right: 1.1rem;
+      border: 0;
+      background: transparent;
+      color: #9ca3af;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    .modal-close:hover {
+      color: #f9fafb;
+    }
+    .pix-box {
+      margin-top: 1.25rem;
+      padding: 1rem 1.25rem;
+      border-radius: 0.75rem;
+      background: rgba(15, 118, 110, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      font-size: 0.9rem;
+    }
+    .pix-box pre {
+      white-space: pre-wrap;
+      word-break: break-all;
+      font-size: 0.8rem;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 0.75rem;
+      border-radius: 0.75rem;
+      margin: 0.5rem 0 0.75rem;
+    }
+    .pix-box.hidden {
+      display: none;
+    }
+    .input-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .input-row input {
+      width: 100%;
+      padding: 0.65rem 0.8rem;
+      border-radius: 0.5rem;
+      border: 1px solid #1f2933;
+      background: #020617;
+      color: #e5e7eb;
+    }
+    @media (min-width: 640px) {
+      .input-row {
+        flex-direction: row;
+      }
+    }
+    .btn-small {
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="logo-block">
+        <div class="logo-mark">OA</div>
+        <div class="logo-text">
+          <span class="logo-small">Octopus Axis E-books</span>
+          <span class="logo-sub">Série Música &amp; Medicina</span>
+        </div>
+      </div>
+
+      <nav class="main-nav">
+        <a href="#beneficios">Benefícios</a>
+        <a href="#conteudo">Conteúdo</a>
+        <a href="#para-quem">Para quem é</a>
+        <a href="#sobre">Autora</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO / VITRINE -->
+    <section class="hero">
+      <div class="container hero-grid">
+
+        <!-- TEXTO -->
+        <div class="hero-text">
+          <span class="pill">Série Música &amp; Medicina · E-book</span>
+          <h1 class="hero-title">Música &amp; Ansiedade</h1>
+          <p class="hero-subtitle">
+            Um guia simples, sensível e direto para usar a música a favor da sua mente — mesmo nos dias em que tudo parece demais.
+          </p>
+
+          <p class="hero-tagline">
+            E-book da série <strong>Música &amp; Medicina</strong> — com dicas práticas para reduzir a ansiedade no cotidiano real.
+          </p>
+
+          <!-- BLOCO PREÇO -->
+          <div class="price-box">
+            <div>
+              <p class="price-label">INVESTIMENTO</p>
+              <p class="price-value">R$ 129,00</p>
+              <p class="price-small">
+                Recebimento imediato do PDF após confirmação de pagamento.
+              </p>
+            </div>
+
+            <div class="cta-group">
+              <!-- BOTÕES CONTROLADOS PELO SCRIPT -->
+              <button id="pay-pix" type="button" class="btn btn-primary">
+                PAGAR AGORA VIA PIX<br />
+                <span class="btn-small">R$ 129,00</span>
+              </button>
+
+              <button id="pay-card" type="button" class="btn btn-outline">
+                PAGAR COM<br />CARTÃO DE CRÉDITO
+              </button>
+            </div>
+          </div>
+
+          <p class="hero-notice">
+            Após o pagamento, você recebe um link seguro com o PDF do e-book e o checklist bônus.
+          </p>
+        </div>
+
+        <!-- MOCKUP CAPA -->
+        <div class="hero-cover">
+          <div class="cover-card">
+            <img src="assets/ebook-cover.png" alt="Capa do e-book Música &amp; Ansiedade" class="cover-image" />
+            <div class="cover-gradient"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BENEFÍCIOS PRINCIPAIS -->
+    <section id="beneficios" class="section">
+      <div class="container">
+        <h2 class="section-title">Por que este e-book funciona?</h2>
+        <p class="section-intro">
+          Se você é ansiosa(o), não precisa de mil teorias — precisa de práticas simples, possíveis e que respeitem o seu ritmo.
+        </p>
+
+        <div class="cards-grid">
+          <article class="card">
+            <h3>Simples e aplicável</h3>
+            <p>Dicas que cabem no seu dia real — no trabalho, em casa, no trânsito, antes de dormir ou no meio do caos.</p>
+          </article>
+
+          <article class="card">
+            <h3>Música como ferramenta</h3>
+            <p>Como usar sons, ritmos e silêncios para desacelerar o corpo e organizar o turbilhão de pensamentos.</p>
+          </article>
+
+          <article class="card">
+            <h3>Baseado em clínica e pesquisa</h3>
+            <p>Conteúdo que nasce da prática em saúde mental, aliado à pesquisa em educação, emoção e neurociência.</p>
+          </article>
+
+          <article class="card">
+            <h3>Cuidado humano</h3>
+            <p>Escrita acolhedora, sem julgamentos, para você se sentir compreendida(o) e não apenas “corrigida(o)”.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- O QUE TEM NO E-BOOK -->
+    <section id="conteudo" class="section section-alt">
+      <div class="container">
+        <h2 class="section-title">O que você vai encontrar dentro</h2>
+
+        <div class="split">
+          <div class="split-col">
+            <ul class="feature-list">
+              <li><span class="dot"></span> Como usar sons para desacelerar o corpo e sair do modo “alerta total”.</li>
+              <li><span class="dot"></span> Maneiras de organizar emoções com música — melodias, ritmos e pausas a seu favor.</li>
+              <li><span class="dot"></span> Estratégias para momentos de crise: peito apertado, mente disparada, insônia.</li>
+              <li><span class="dot"></span> Orientações neurocientíficas explicadas de forma leve e acessível.</li>
+              <li><span class="dot"></span> Sugestões de escuta, práticas guiadas e pequenos rituais com música.</li>
+            </ul>
+          </div>
+
+          <div class="split-col">
+            <div class="info-box">
+              <h3>Você recebe:</h3>
+              <ul>
+                <li>E-book completo em PDF.</li>
+                <li>Acesso imediato após o pagamento.</li>
+                <li>Atualizações futuras inclusas.</li>
+                <li>Bônus: checklist diário para acompanhar sua rotina com a música.</li>
+              </ul>
+
+              <p class="info-note">
+                Compra única, acesso permanente. Você lê no seu tempo, no dispositivo que preferir.
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- PARA QUEM É -->
+    <section id="para-quem" class="section">
+      <div class="container">
+        <h2 class="section-title">Para quem este e-book foi escrito</h2>
+
+        <div class="split">
+          <div class="split-col">
+            <ul class="tag-list">
+              <li>• Pessoas que se consideram ansiosas.</li>
+              <li>• Quem vive com o corpo em alerta e a mente acelerada.</li>
+              <li>• Quem ama música, mesmo sem entender teoria.</li>
+              <li>• Quem busca ferramentas naturais e seguras.</li>
+              <li>• Profissionais de saúde e educação que desejam se cuidar.</li>
+            </ul>
+          </div>
+
+          <div class="split-col">
+            <p class="text-block">
+              Se você sente que “tá tudo demais” e gostaria de um jeito gentil de voltar para si, este livro é para você. Sem perfeccionismo, sem promessa milagrosa — apenas ferramentas reais para o seu cotidiano.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMO FUNCIONA A COMPRA -->
+    <section class="section section-alt">
+      <div class="container">
+        <h2 class="section-title">Como funciona a compra</h2>
+
+        <div class="steps-grid">
+          <div class="step">
+            <div class="step-number">1</div>
+            <h3>Escolha a forma de pagamento</h3>
+            <p>Clique em “Pagar via PIX” ou “Pagar com Cartão de Crédito”. Você será direcionada(o) para um checkout seguro.</p>
+          </div>
+
+          <div class="step">
+            <div class="step-number">2</div>
+            <h3>Confirme o pagamento</h3>
+            <p>Finalize o pagamento. Em poucos instantes, a confirmação é feita automaticamente pelo sistema.</p>
+          </div>
+
+          <div class="step">
+            <div class="step-number">3</div>
+            <h3>Receba o e-book</h3>
+            <p>Após a confirmação, você recebe o link para baixar o PDF do e-book e o material bônus no seu e-mail ou WhatsApp cadastrado.</p>
+          </div>
+        </div>
+
+        <div class="cta-center">
+          <!-- SEGUNDO BOTÃO CONTROLADO PELO SCRIPT (PIX) -->
+          <button id="pay-pix-secondary" type="button" class="btn btn-primary">
+            QUERO COMEÇAR AGORA COM PIX
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- DEPOIMENTOS E GARANTIA -->
+    <section class="section">
+      <div class="container testimonials-grid">
+        <div>
+          <h2 class="section-title">O que as pessoas dizem</h2>
+
+          <div class="testimonial-list">
+            <blockquote>“As dicas mudaram meu dia imediatamente. Usei a música antes de dormir e consegui relaxar de verdade.”</blockquote>
+            <blockquote>“Nunca imaginei que música pudesse me ajudar tanto na ansiedade. Me senti acolhida e não julgada.”</blockquote>
+            <blockquote>“É simples, humano e profundo. Parece que alguém traduziu o que eu sinto e colocou em prática.”</blockquote>
+          </div>
+        </div>
+
+        <div class="guarantee-box">
+          <h2 class="section-title small">Garantia simbólica</h2>
+          <p>Se você sentir que o e-book não te ajudou em nada, basta me escrever. Prefiro que você fique bem do que forçar uma venda.</p>
+          <p class="guarantee-note">Este projeto existe para cuidar de pessoas — a venda é consequência.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SOBRE A AUTORA -->
+    <section id="sobre" class="section section-alt">
+      <div class="container about-grid">
+
+        <div class="about-photo">
+          <div class="about-photo-wrap">
+            <img src="assets/author-photo.jpg" alt="Foto de Fernanda Franzoni Zaguini" />
+          </div>
+        </div>
+
+        <div class="about-text">
+          <h2 class="section-title">Sobre a autora</h2>
+          <p>
+            Sou Mts. Fernanda Franzoni Zaguini, musicoterapeuta há mais de 10 anos, mestre e doutoranda em Educação pela UFPR. Trabalho com saúde mental de adultos e com o desenvolvimento de crianças, unindo música, emoção e neurociência.
+          </p>
+          <p>
+            Este e-book nasce da clínica, da pesquisa e da arte — para que pessoas ansiosas tenham acesso a um cuidado simples, acessível e profundamente humano.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="section">
+      <div class="container">
+        <h2 class="section-title">Perguntas frequentes</h2>
+
+        <div class="faq-list">
+          <details open>
+            <summary>Em qual formato recebo o e-book?</summary>
+            <p>Você recebe o e-book em formato PDF, que pode ser lido no celular, tablet ou computador.</p>
+          </details>
+
+          <details>
+            <summary>O acesso é imediato?</summary>
+            <p>Sim. Após a confirmação do pagamento, o sistema libera automaticamente o link de download.</p>
+          </details>
+
+          <details>
+            <summary>Posso pagar com cartão ou só PIX?</summary>
+            <p>Você pode escolher PIX ou cartão de crédito, conforme for melhor para você.</p>
+          </details>
+
+          <details>
+            <summary>Posso compartilhar o arquivo com outras pessoas?</summary>
+            <p>Não é permitido distribuir o PDF, mas você pode indicar a página para pessoas que se identifiquem com o conteúdo.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA FINAL -->
+    <section class="section section-alt">
+      <div class="container final-cta">
+        <div>
+          <h2 class="section-title">Pronta(o) para usar a música a favor da sua ansiedade?</h2>
+          <p class="section-intro">Um único e-book, um investimento acessível e ferramentas que você pode levar para a vida inteira.</p>
+        </div>
+
+        <!-- BOTÃO FINAL PARA CARTÃO -->
+        <button id="pay-card-final" type="button" class="btn btn-primary">
+          GARANTIR MEU E-BOOK AGORA
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>© 2025 Octopus Axis — Música &amp; Medicina.</p>
+      <p>Contato: contato@octopusaxis.com</p>
+    </div>
+  </footer>
+
+  <!-- MODAL DE CHECKOUT -->
+  <div id="checkout-modal" class="checkout-modal hidden">
+    <div class="checkout-modal-inner">
+      <button id="modal-close" class="modal-close" type="button" aria-label="Fechar">
+        &times;
+      </button>
+
+      <h2>Quase lá!</h2>
+      <p>Preencha seus dados para receber o link seguro do e-book após a confirmação do pagamento.</p>
+
+      <form id="checkout-form">
+        <div class="input-row">
+          <input type="text" id="buyer-name" name="name" placeholder="Seu nome completo" required />
+          <input type="email" id="buyer-email" name="email" placeholder="Seu melhor e-mail" required />
+        </div>
+
+        <p id="modal-message" class="hero-notice"></p>
+
+        <button type="submit" class="btn btn-primary">
+          Continuar para pagamento seguro
+        </button>
+      </form>
+
+      <!-- Caixa Pix (aparece só quando o método é Pix) -->
+      <div id="pix-box" class="pix-box hidden">
+        <p>Seus dados foram registrados. Agora copie o código Pix abaixo e pague pelo app do seu banco:</p>
+
+        <pre id="pix-code-display"></pre>
+
+        <button type="button" id="copy-pix-code" class="btn btn-outline btn-small">
+          Copiar código PIX
+        </button>
+
+        <p id="copy-pix-feedback" class="hero-notice"></p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SUPABASE + LÓGICA DE PAGAMENTO -->
+<script>
+  // 🔎 DETECÇÃO BÁSICA DE BLOQUEIO DO MERCADO PAGO (AdBlock, etc.)
+  async function detectarBloqueioMP() {
+    try {
+      const resp = await fetch("https://sdk.mercadopago.com/js/v2", {
+        method: "HEAD",
+      });
+      return !resp.ok;
+    } catch (e) {
+      return true;
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    verificarBloqueioMP();
+    iniciarCheckout();
+  });
+
+  async function verificarBloqueioMP() {
+    const bloqueado = await detectarBloqueioMP();
+    if (bloqueado) {
+      alert(
+        "⚠ Atenção!\n\nSeu navegador pode estar bloqueando scripts do Mercado Pago.\n" +
+          "Se o botão Pagar aparecer desabilitado, tente:\n\n" +
+          "• Abrir esta página em modo anônimo;\n" +
+          "• Desativar AdBlock / bloqueadores de anúncios;\n" +
+          "• Permitir cookies e scripts de terceiros."
+      );
+    }
+  }
+
+  // 💳 LÓGICA DOS BOTÕES + CHAMADA PARA /api/create-checkout
+  function iniciarCheckout() {
+    const payPixBtn = document.getElementById("pay-pix");
+    const payPixSecondaryBtn = document.getElementById("pay-pix-secondary");
+    const payCardBtn = document.getElementById("pay-card");
+    const payCardFinalBtn = document.getElementById("pay-card-final");
+
+    const modal = document.getElementById("checkout-modal");
+    const modalClose = document.getElementById("modal-close");
+    const checkoutForm = document.getElementById("checkout-form");
+
+    const buyerNameInput = document.getElementById("buyer-name");
+    const buyerEmailInput = document.getElementById("buyer-email");
+    const modalMessage = document.getElementById("modal-message");
+
+    let currentPaymentMethod = null;
+
+    function openModal(method) {
+      currentPaymentMethod = method;
+      modal.classList.remove("hidden");
+      modalMessage.textContent = "";
+      checkoutForm.reset();
+    }
+
+    function closeModal() {
+      modal.classList.add("hidden");
+    }
+
+    // Botões → abre modal
+    payPixBtn?.addEventListener("click", () => openModal("pix"));
+    payPixSecondaryBtn?.addEventListener("click", () => openModal("pix"));
+    payCardBtn?.addEventListener("click", () => openModal("card"));
+    payCardFinalBtn?.addEventListener("click", () => openModal("card"));
+    modalClose?.addEventListener("click", closeModal);
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    // Formulário → chama /api/create-checkout (backend faz Supabase + Mercado Pago)
+    checkoutForm?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const name = buyerNameInput.value.trim();
+      const email = buyerEmailInput.value.trim();
+
+      if (!name || !email) {
+        modalMessage.textContent = "Preencha nome e e-mail para continuar.";
+        return;
+      }
+
+      if (!currentPaymentMethod) {
+        modalMessage.textContent =
+          "Escolha primeiro uma forma de pagamento.";
+        return;
+      }
+
+      modalMessage.textContent = "Iniciando pagamento seguro...";
+
+      try {
+        const resp = await fetch("/api/create-checkout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            paymentMethod: currentPaymentMethod, // "pix" ou "card"
+          }),
+        });
+
+        const result = await resp.json();
+
+        if (!resp.ok) {
+          console.error("Erro no checkout:", result);
+          modalMessage.textContent =
+            result.error ||
+            "Erro ao iniciar o pagamento. Tente novamente em alguns instantes.";
+          return;
+        }
+
+        // Guarda e-mail para a obrigado.html usar
+        try {
+          localStorage.setItem("buyer_email", email);
+        } catch {}
+
+        if (!result.initPoint) {
+          modalMessage.textContent =
+            "Erro inesperado ao criar o pagamento. Tente novamente.";
+          return;
+        }
+
+        // Redireciona para o checkout do Mercado Pago (PIX ou CARTÃO)
+        window.location.href = result.initPoint;
+      } catch (err) {
+        console.error(err);
+        modalMessage.textContent =
+          "Falha de conexão ao iniciar o pagamento. Verifique sua internet e tente novamente.";
+      }
+    });
+  }
+</script>
+<script src="script.js"></script>
+</body>
+</html>
