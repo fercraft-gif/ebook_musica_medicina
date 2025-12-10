@@ -8,7 +8,13 @@
       name="description"
       content="Obrigada pela compra do e-book Música & Ansiedade."
     />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Tight:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="styles.css" />
+
     <style>
       .thankyou-hero {
         min-height: 70vh;
@@ -28,10 +34,6 @@
         font-size: clamp(1.8rem, 3vw, 2.3rem);
         margin-bottom: 0.75rem;
       }
-      .thankyou-email {
-        font-weight: 600;
-        color: #a7f3d0;
-      }
       .thankyou-actions {
         margin-top: 2rem;
         display: flex;
@@ -43,8 +45,13 @@
         opacity: 0.9;
         margin-top: 1.25rem;
       }
+      .thankyou-email {
+        font-weight: 600;
+        color: #a7f3d0;
+      }
     </style>
   </head>
+
   <body>
     <header class="site-header">
       <div class="container header-inner">
@@ -62,18 +69,19 @@
       <div class="container">
         <div class="thankyou-card">
           <p class="pill">Compra concluída · Música &amp; Ansiedade</p>
-          <h1 class="thankyou-title">Obrigada por confiar no meu trabalho.</h1>
+
+          <h1 class="thankyou-title">Obrigada por apoiar meu trabalho.</h1>
+
           <p>
-            Assim que o pagamento for confirmado pelo sistema, o link seguro
-            para download do e-book será enviado para:
-          </p>
-          <p class="thankyou-email" id="buyer-email-display">
-            seu e-mail cadastrado
+            Seu pedido foi registrado com sucesso. Assim que o pagamento for
+            confirmado pelo sistema do Mercado Pago, você poderá acessar o PDF
+            diretamente na página de download.
           </p>
 
           <p>
-            Se o e-mail não aparecer em alguns minutos, lembre-se de verificar
-            também a pasta de spam / promoções.
+            <strong>Nenhum e-mail é enviado automaticamente.</strong><br />
+            O acesso ao e-book é feito exclusivamente pela página de download,
+            onde o sistema verifica seu pagamento em tempo real.
           </p>
 
           <div class="thankyou-actions">
@@ -86,9 +94,9 @@
           </div>
 
           <p class="thankyou-note">
-            Dica: se você digitou o e-mail errado sem querer, me escreva em
-            <strong>Mmt.fernandazaguini@gmail.com</strong> com o comprovante de
-            pagamento para que eu possa te ajudar.
+            Se você tiver qualquer dúvida ou encontrar algum problema,
+            fale comigo:<br />
+            <span class="thankyou-email">mt.fernandazaguini@gmail.com</span>
           </p>
         </div>
       </div>
@@ -99,16 +107,5 @@
         <p>© 2025 Octopus Axis — Música &amp; Medicina.</p>
       </div>
     </footer>
-
-    <script>
-      // Recupera o e-mail salvo no checkout do index.html
-      const emailSpan = document.getElementById("buyer-email-display");
-      try {
-        const email = localStorage.getItem("buyer_email");
-        if (email) {
-          emailSpan.textContent = email;
-        }
-      } catch {}
-    </script>
   </body>
 </html>

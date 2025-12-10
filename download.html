@@ -9,13 +9,13 @@
       content="Área de download do e-book Música & Ansiedade — acesse seu PDF usando o e-mail da compra."
     />
 
-    <!-- Fontes modernas (opcional, igual ao index.html) -->
+    <!-- Fontes modernas (igual ao index.html) -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Tight:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
 
-    <!-- Seu CSS principal -->
+    <!-- CSS principal -->
     <link rel="stylesheet" href="styles.css" />
   </head>
 
@@ -33,36 +33,41 @@
       <section class="download-section">
         <div class="download-container">
           <h1 class="download-title">Baixar seu e-book</h1>
+
           <p class="download-subtitle">
-            Use o <strong>e-mail que você usou na compra</strong> para liberar o
-            download do PDF. Se o pagamento já foi aprovado, o link é gerado na
-            hora.
+            Informe o <strong>e-mail que você usou na compra</strong> para que o sistema
+            encontre seu pedido. Se o pagamento já estiver aprovado, o link para o PDF
+            é liberado aqui mesmo, de forma automática.
           </p>
 
           <form id="download-form" class="download-form">
-            <label class="form-label" for="email">
-              E-mail usado na compra
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              autocomplete="email"
-              placeholder="seuemail@exemplo.com"
-              class="form-input"
-            />
+            <div>
+              <label class="form-label" for="email">
+                E-mail usado na compra
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                autocomplete="email"
+                placeholder="seuemail@exemplo.com"
+                class="form-input"
+              />
+            </div>
 
-            <label class="form-label" for="orderId">
-              ID do pedido (opcional)
-            </label>
-            <input
-              id="orderId"
-              name="orderId"
-              type="text"
-              placeholder="Cole aqui se você tiver o ID do pedido"
-              class="form-input"
-            />
+            <div>
+              <label class="form-label" for="orderId">
+                ID do pedido (opcional)
+              </label>
+              <input
+                id="orderId"
+                name="orderId"
+                type="text"
+                placeholder="Se você tiver o ID, cole aqui"
+                class="form-input"
+              />
+            </div>
 
             <button id="download-button" type="submit" class="btn btn-primary">
               Verificar e liberar download
@@ -70,39 +75,15 @@
           </form>
 
           <div id="download-status" class="download-status" aria-live="polite"></div>
-
-          <div id="download-link-wrapper" class="download-link-wrapper hidden">
-            <p class="download-ready-text">
-              ✅ Seu download está liberado! Se não abriu automaticamente,
-              clique no botão abaixo:
-            </p>
-            <a
-              id="download-link"
-              href="#"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="btn btn-secondary"
-            >
-              Abrir e-book em nova aba
-            </a>
-
-            <p id="bonus-wrapper" class="bonus-wrapper hidden">
-              <a
-                id="bonus-link"
-                href="#"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="bonus-link"
-              >
-                📎 Acessar material bônus
-              </a>
-            </p>
-          </div>
+          
 
           <p class="download-help-text">
-            Se o sistema indicar que o pagamento ainda não foi confirmado,
-            aguarde alguns minutos e tente novamente. Qualquer problema, fale
-            comigo pelo WhatsApp.
+            Se o sistema indicar que o pagamento ainda não foi confirmado, respire fundo,
+            aguarde alguns minutos e tente novamente. Às vezes o banco e o gateway demoram
+            um pouco para conversar entre si.
+            <br /><br />
+            Se algo parecer estranho ou você não conseguir acessar, pode falar comigo com
+            o <strong>comprovante de pagamento</strong> em mãos — vou te ajudar a resolver.
           </p>
         </div>
       </section>
@@ -126,8 +107,6 @@
       const button = document.getElementById('download-button');
       const linkWrapper = document.getElementById('download-link-wrapper');
       const downloadLink = document.getElementById('download-link');
-      const bonusWrapper = document.getElementById('bonus-wrapper');
-      const bonusLink = document.getElementById('bonus-link');
 
       function setStatus(message, type) {
         statusEl.textContent = message || '';
@@ -159,7 +138,6 @@
         setLoading(true);
         setStatus('Verificando seu pedido…', 'info');
         linkWrapper.classList.add('hidden');
-        bonusWrapper.classList.add('hidden');
 
         const email = document.getElementById('email').value.trim();
         const orderId = document.getElementById('orderId').value.trim();
@@ -192,7 +170,7 @@
 
           if (!data.found) {
             setStatus(
-              'Não encontrei nenhum pedido para este e-mail. Verifique se digitou corretamente.',
+              'Não encontrei nenhum pedido para este e-mail. Verifique se digitou corretamente ou tente outro endereço que você usa com frequência.',
               'error'
             );
             setLoading(false);
@@ -204,7 +182,7 @@
             setStatus(
               'Seu pagamento ainda não foi confirmado (status: ' +
                 statusTexto +
-                '). Assim que for aprovado, o download será liberado.',
+                '). Assim que for aprovado, o download será liberado automaticamente aqui.',
               'info'
             );
             setLoading(false);
@@ -219,11 +197,6 @@
 
           downloadLink.href = data.ebookUrl;
           linkWrapper.classList.remove('hidden');
-
-          if (data.bonusUrl) {
-            bonusLink.href = data.bonusUrl;
-            bonusWrapper.classList.remove('hidden');
-          }
 
           // Redireciona automaticamente para o PDF
           window.location.href = data.ebookUrl;

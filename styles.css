@@ -675,3 +675,194 @@ details p {
     padding: 1.4rem 1.4rem 1.8rem;
   }
 }
+/* =========================================================
+   PÁGINA DE DOWNLOAD · MESMO VISUAL DA LANDING
+========================================================= */
+
+/* fundo geral */
+body.download-page {
+  background: #f5faf9;
+  color: #184047;
+}
+
+/* cabeçalho minimalista (marca texto) */
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.brand-tagline {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: #6a8a8f;
+  font-weight: 600;
+}
+
+.brand-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #184047;
+}
+
+/* área principal */
+.download-main {
+  padding: 4rem 0 3rem;
+}
+
+.download-section {
+  display: flex;
+  justify-content: center;
+  padding: 0 1rem;
+}
+
+/* card central de download */
+.download-container {
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 2.5rem 2.8rem 2.6rem;
+
+  background: linear-gradient(145deg, #e2f3f6, #f4f7f2);
+  border-radius: 1.75rem;
+  box-shadow: 0 28px 60px rgba(35, 86, 97, 0.35);
+}
+
+/* títulos */
+.download-title {
+  font-family: "Inter Tight", "Inter", sans-serif;
+  font-size: 2.1rem;
+  color: #163641;
+  margin-bottom: 0.8rem;
+}
+
+.download-subtitle {
+  font-size: 0.96rem;
+  color: #607f84;
+  max-width: 640px;
+  margin-bottom: 1.8rem;
+}
+
+/* formulário */
+.download-form {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr auto;
+  gap: 0.7rem 1rem;
+  align-items: end;
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6a8a8f;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(154, 187, 187, 0.9);
+  background: #f5faf9;
+  color: #184047;
+  font-size: 0.9rem;
+}
+
+.form-input::placeholder {
+  color: #9ab3b4;
+}
+
+/* botão reaproveita .btn .btn-primary do index */
+.download-form .btn-primary {
+  white-space: nowrap;
+  padding-inline: 1.6rem;
+}
+
+/* status de mensagens */
+.download-status {
+  font-size: 0.86rem;
+  margin-bottom: 1rem;
+}
+
+.status-info {
+  color: #336a74;
+}
+
+.status-success {
+  color: #0f766e;
+}
+
+.status-error {
+  color: #b91c1c;
+}
+
+/* bloco de links quando o download é liberado */
+.download-link-wrapper {
+  margin-bottom: 1.2rem;
+}
+
+.download-ready-text {
+  font-size: 0.9rem;
+  color: #3c646b;
+  margin-bottom: 0.7rem;
+}
+
+/* botão secundário */
+.btn.btn-secondary {
+  display: inline-block;
+  margin-bottom: 0.7rem;
+  background: #f5faf9;
+  border-color: #bedfe0;
+  color: #19506a;
+}
+
+.btn.btn-secondary:hover {
+  background: #e7f4f4;
+  box-shadow: 0 10px 20px rgba(79, 120, 126, 0.25);
+}
+
+/* link do bônus */
+.bonus-link {
+  font-size: 0.9rem;
+  color: #155e75;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.bonus-link:hover {
+  text-decoration: underline;
+}
+
+/* texto de ajuda */
+.download-help-text {
+  font-size: 0.84rem;
+  color: #708c90;
+  margin-top: 0.8rem;
+}
+
+/* utilitárias */
+.hidden {
+  display: none !important;
+}
+
+/* responsivo */
+@media (max-width: 960px) {
+  .download-container {
+    padding: 2rem 1.6rem 2.2rem;
+    border-radius: 1.3rem;
+  }
+
+  .download-form {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .download-form .btn-primary {
+    width: 100%;
+    justify-self: stretch;
+    text-align: center;
+  }
+}

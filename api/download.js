@@ -2,31 +2,18 @@
 import { supabaseAdmin } from '../lib/supabaseAdmin.js';
 
 /**
- * download
+ * /api/download
  *
- * - Confere no Supabase se o pedido está com download_allowed = true
- * - Se estiver liberado, gera URL assinada do PDF (e opcionalmente bônus)
- * - Retorna as URLs em JSON para o front redirecionar ou abrir em nova aba
- *
- * Sugestão de uso no front (obrigado.html):
- *   fetch(`/api/download?email=${encodeURIComponent(email)}&orderId=${orderId}`)
- *     .then(r => r.json())
- *     .then(data => {
- *       if (data.allowed && data.ebookUrl) {
- *         window.location.href = data.ebookUrl;
- *       } else {
- *         // mostrar mensagem de "pagamento ainda em análise" etc.
- *       }
- *     });
+ * - Confere no Supabase se há um pedido para o e-mail informado
+ * - Verifica se download_allowed = true (pagamento aprovado / liberado)
+ * - Se estiver liberado, gera URL assinada do PDF no Storage
+ * - Retorna as infos em JSON para o front abrir automaticamente
  */
 
 // Ajuste estes valores conforme o que você criou no Supabase Storage
 const EBOOK_BUCKET = process.env.EBOOK_BUCKET || 'ebooks';
 const EBOOK_MAIN_PATH =
   process.env.EBOOK_MAIN_PATH || 'musica-ansiedade/ebook-musica-ansiedade.pdf';
-// Se não tiver bônus ainda, pode deixar como null
-const EBOOK_BONUS_PATH =
-  process.env.EBOOK_BONUS_PATH || null;
 
 // Tempo de expiração do link (em segundos) – aqui 2 horas
 const SIGNED_URL_EXPIRES_IN = 60 * 60 * 2;
@@ -42,7 +29,7 @@ export default async function handler(req, res) {
     if (!email) {
       return res.status(400).json({
         step: 'validation',
-        error: 'E-mail é obrigatório para gerar o download.',
+        error: 'E-mail é obrigatório para localizar seu pedido.',
       });
     }
 
@@ -50,10 +37,10 @@ export default async function handler(req, res) {
     let query = supabaseAdmin
       .from('ebook_order')
       .select('id, status, download_allowed, mp_status, created_at')
-      .eq('email', email);
+      .eq('email', email.trim());
 
     if (orderId) {
-      query = query.eq('id', orderId);
+      query = query.eq('id', orderId.trim());
     }
 
     query = query.order('created_at', { ascending: false }).limit(1);
@@ -83,8 +70,8 @@ export default async function handler(req, res) {
 
     const order = data[0];
 
+    // 2) Se ainda não liberou download, apenas informa status
     if (!order.download_allowed) {
-      // Pagamento ainda não aprovado / webhook não atualizou
       return res.status(200).json({
         found: true,
         allowed: false,
@@ -92,11 +79,11 @@ export default async function handler(req, res) {
         mpStatus: order.mp_status,
         orderId: order.id,
         message:
-          'Seu pagamento ainda não foi confirmado. Assim que for aprovado, o download será liberado.',
+          'Seu pagamento ainda não foi confirmado. Assim que for aprovado, o download será liberado automaticamente.',
       });
     }
 
-    // 2) Gera URL assinada do PDF principal
+    // 3) Gera URL assinada do PDF principal
     const { data: ebookSigned, error: ebookSignedError } =
       await supabaseAdmin.storage
         .from(EBOOK_BUCKET)
@@ -117,27 +104,19 @@ export default async function handler(req, res) {
 
     const ebookUrl = ebookSigned?.signedUrl;
 
-    // 3) (Opcional) Gera URL assinada do bônus, se configurado
-    let bonusUrl = null;
+    if (!ebookUrl) {
+      console.error(
+        'Signed URL do e-book veio vazio em /api/download:',
+        JSON.stringify(ebookSigned, null, 2)
+      );
 
-    if (EBOOK_BONUS_PATH) {
-      const { data: bonusSigned, error: bonusSignedError } =
-        await supabaseAdmin.storage
-          .from(EBOOK_BUCKET)
-          .createSignedUrl(EBOOK_BONUS_PATH, SIGNED_URL_EXPIRES_IN);
-
-      if (bonusSignedError) {
-        console.error(
-          'Erro ao criar signed URL do material bônus:',
-          JSON.stringify(bonusSignedError, null, 2)
-        );
-        // Não bloqueia o fluxo – apenas não envia bonusUrl
-      } else {
-        bonusUrl = bonusSigned?.signedUrl || null;
-      }
+      return res.status(500).json({
+        step: 'signed-url-empty',
+        error: 'Não foi possível gerar o link de download do e-book.',
+      });
     }
 
-    // 4) Retorna as URLs para o front
+    // 4) Retorna dados para o front
     return res.status(200).json({
       found: true,
       allowed: true,
@@ -145,7 +124,6 @@ export default async function handler(req, res) {
       mpStatus: order.mp_status,
       orderId: order.id,
       ebookUrl,
-      bonusUrl,
       expiresInSeconds: SIGNED_URL_EXPIRES_IN,
     });
   } catch (err) {
