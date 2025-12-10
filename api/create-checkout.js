@@ -40,7 +40,7 @@ export default async function handler(req, res) {
       .insert({
         name,
         email,
-        status: 'pending', // texto
+        status: 'pending', // texto interno
         download_allowed: false,
         mp_status: 'init', // status inicial do MP
       })
@@ -93,9 +93,10 @@ export default async function handler(req, res) {
       external_reference: orderId, // casa com a coluna id da tabela
       auto_return: 'approved',
       back_urls: {
-        success: 'https://octopusaxisebook.com/obrigado.html',
-        pending: 'https://octopusaxisebook.com/obrigado.html',
-        failure: 'https://octopusaxisebook.com/obrigado.html',
+        // 👉 Agora tudo volta para a página de download
+        success: 'https://octopusaxisebook.com/download.html',
+        pending: 'https://octopusaxisebook.com/download.html',
+        failure: 'https://octopusaxisebook.com/download.html',
       },
       items: [
         {
@@ -112,6 +113,7 @@ export default async function handler(req, res) {
         name,
         email,
       },
+      // Webhook que atualiza status / download_allowed no Supabase
       notification_url: notificationUrl || undefined,
       payment_methods: paymentMethods,
     };
@@ -136,8 +138,7 @@ export default async function handler(req, res) {
       return res.status(500).json({
         step: 'mp-preference',
         error: 'Erro ao criar preferência no Mercado Pago.',
-        details:
-          mpErr?.response?.body || mpErr?.message || String(mpErr),
+        details: mpErr?.response?.body || mpErr?.message || String(mpErr),
       });
     }
 

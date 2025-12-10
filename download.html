@@ -6,87 +6,139 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Área de download do e-book Música & Ansiedade — acesse seu PDF usando o e-mail da compra."
+      content="Área de download do e-book Música & Ansiedade — obrigado pela sua compra!"
     />
 
-    <!-- Fontes modernas (igual ao index.html) -->
+    <!-- Fontes modernas (mesmo padrão do site) -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Tight:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
 
-    <!-- CSS principal -->
+    <!-- CSS principal da landing -->
     <link rel="stylesheet" href="styles.css" />
+
+    <!-- Estilo extra só para o cartão de agradecimento -->
+    <style>
+      .thankyou-hero {
+        min-height: 70vh;
+        display: flex;
+        align-items: center;
+      }
+
+      .thankyou-card {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2.5rem 2rem;
+        border-radius: 1.5rem;
+        background: radial-gradient(circle at top left, #16343f, #020617);
+        box-shadow: 0 22px 45px rgba(0, 0, 0, 0.6);
+        color: #e5e7eb;
+      }
+
+      .thankyou-title {
+        font-size: clamp(1.8rem, 3vw, 2.3rem);
+        margin-bottom: 0.75rem;
+      }
+
+      .thankyou-email {
+        font-weight: 600;
+        color: #a7f3d0;
+        margin: 0.25rem 0 1rem;
+      }
+
+      .thankyou-actions {
+        margin-top: 2rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+
+      .thankyou-note {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-top: 1.25rem;
+      }
+
+      .status-text {
+        margin-top: 0.75rem;
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+
+      .status-ok {
+        color: #bbf7d0;
+      }
+
+      .status-warn {
+        color: #fde68a;
+      }
+
+      .status-error {
+        color: #fecaca;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+    </style>
   </head>
 
   <body class="page download-page">
+    <!-- Cabeçalho igual ao resto do site -->
     <header class="site-header">
       <div class="container header-inner">
-        <a href="/" class="brand">
-          <span class="brand-tagline">Série Música &amp; Medicina</span>
-          <span class="brand-title">Música &amp; Ansiedade</span>
-        </a>
+        <div class="logo-block">
+          <div class="logo-mark">OA</div>
+          <div class="logo-text">
+            <span class="logo-small">Octopus Axis E-books</span>
+            <span class="logo-sub">Série Música &amp; Medicina</span>
+          </div>
+        </div>
       </div>
     </header>
 
-    <main class="download-main">
-      <section class="download-section">
-        <div class="download-container">
-          <h1 class="download-title">Baixar seu e-book</h1>
+    <main class="thankyou-hero">
+      <div class="container">
+        <div class="thankyou-card">
+          <p class="pill">Compra concluída · Música &amp; Ansiedade</p>
 
-          <p class="download-subtitle">
-            Informe o <strong>e-mail que você usou na compra</strong> para que o sistema
-            encontre seu pedido. Se o pagamento já estiver aprovado, o link para o PDF
-            é liberado aqui mesmo, de forma automática.
+          <h1 class="thankyou-title" id="download-title">
+            Obrigada por confiar no meu trabalho.
+          </h1>
+
+          <p id="download-message">
+            Estamos confirmando seu pagamento e preparando o download seguro do
+            e-book.
           </p>
 
-          <form id="download-form" class="download-form">
-            <div>
-              <label class="form-label" for="email">
-                E-mail usado na compra
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                autocomplete="email"
-                placeholder="seuemail@exemplo.com"
-                class="form-input"
-              />
-            </div>
+          <p class="thankyou-email" id="buyer-email-display"></p>
 
-            <div>
-              <label class="form-label" for="orderId">
-                ID do pedido (opcional)
-              </label>
-              <input
-                id="orderId"
-                name="orderId"
-                type="text"
-                placeholder="Se você tiver o ID, cole aqui"
-                class="form-input"
-              />
-            </div>
+          <p id="download-status" class="status-text status-warn">
+            Buscando seu pedido…
+          </p>
 
-            <button id="download-button" type="submit" class="btn btn-primary">
-              Verificar e liberar download
+          <div class="thankyou-actions">
+            <button
+              id="retry-button"
+              type="button"
+              class="btn btn-primary hidden"
+            >
+              Abrir e-book novamente
             </button>
-          </form>
 
-          <div id="download-status" class="download-status" aria-live="polite"></div>
-          
+            <a href="index.html" class="btn btn-outline">
+              Voltar para a página inicial
+            </a>
+          </div>
 
-          <p class="download-help-text">
-            Se o sistema indicar que o pagamento ainda não foi confirmado, respire fundo,
-            aguarde alguns minutos e tente novamente. Às vezes o banco e o gateway demoram
-            um pouco para conversar entre si.
-            <br /><br />
-            Se algo parecer estranho ou você não conseguir acessar, pode falar comigo com
-            o <strong>comprovante de pagamento</strong> em mãos — vou te ajudar a resolver.
+          <p class="thankyou-note">
+            Se algo não funcionar ou o e-book não abrir, me escreva em
+            <strong>mt.fernandazaguini@gmail.com</strong> com o comprovante de
+            pagamento, que eu te ajudo pessoalmente.
           </p>
         </div>
-      </section>
+      </div>
     </main>
 
     <footer class="site-footer">
@@ -100,116 +152,131 @@
 
     <script>
       // Atualiza ano no rodapé
-      document.getElementById('year').textContent = new Date().getFullYear();
+      document.getElementById("year").textContent =
+        new Date().getFullYear();
 
-      const form = document.getElementById('download-form');
-      const statusEl = document.getElementById('download-status');
-      const button = document.getElementById('download-button');
-      const linkWrapper = document.getElementById('download-link-wrapper');
-      const downloadLink = document.getElementById('download-link');
+      const titleEl = document.getElementById("download-title");
+      const msgEl = document.getElementById("download-message");
+      const statusEl = document.getElementById("download-status");
+      const emailEl = document.getElementById("buyer-email-display");
+      const retryBtn = document.getElementById("retry-button");
 
-      function setStatus(message, type) {
-        statusEl.textContent = message || '';
-        statusEl.classList.remove('status-error', 'status-success', 'status-info');
+      function setStatus(message, mode) {
+        statusEl.textContent = message || "";
+        statusEl.classList.remove("status-ok", "status-warn", "status-error");
 
         if (!message) return;
 
-        if (type === 'error') {
-          statusEl.classList.add('status-error');
-        } else if (type === 'success') {
-          statusEl.classList.add('status-success');
-        } else {
-          statusEl.classList.add('status-info');
-        }
+        if (mode === "ok") statusEl.classList.add("status-ok");
+        else if (mode === "error") statusEl.classList.add("status-error");
+        else statusEl.classList.add("status-warn");
       }
 
-      function setLoading(isLoading) {
-        if (isLoading) {
-          button.disabled = true;
-          button.textContent = 'Verificando...';
-        } else {
-          button.disabled = false;
-          button.textContent = 'Verificar e liberar download';
-        }
+      function getBuyerEmail() {
+        // 1) tenta pegar da URL ?email=
+        try {
+          const url = new URL(window.location.href);
+          const fromQuery = url.searchParams.get("email");
+          if (fromQuery) return fromQuery.trim();
+        } catch {}
+
+        // 2) tenta pegar do localStorage salvo no checkout
+        try {
+          const stored = localStorage.getItem("buyer_email");
+          if (stored) return stored.trim();
+        } catch {}
+
+        return null;
       }
 
-      form.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        setLoading(true);
-        setStatus('Verificando seu pedido…', 'info');
-        linkWrapper.classList.add('hidden');
-
-        const email = document.getElementById('email').value.trim();
-        const orderId = document.getElementById('orderId').value.trim();
+      async function iniciarDownload() {
+        const email = getBuyerEmail();
 
         if (!email) {
-          setStatus('Por favor, preencha o e-mail usado na compra.', 'error');
-          setLoading(false);
+          msgEl.textContent =
+            "Não consegui identificar o e-mail da compra. Mas calma, a gente resolve.";
+          setStatus(
+            "Se você já pagou, me envie um e-mail em mt.fernandazaguini@gmail.com com o comprovante para liberar manualmente.",
+            "error"
+          );
+          emailEl.textContent = "";
           return;
         }
 
+        emailEl.textContent = email;
+        setStatus("Procurando seu pedido no sistema…", "warn");
+
         try {
-          const params = new URLSearchParams();
-          params.set('email', email);
-          if (orderId) params.set('orderId', orderId);
+          const resp = await fetch(
+            "/api/download?email=" + encodeURIComponent(email)
+          );
 
-          const response = await fetch('/api/download?' + params.toString(), {
-            method: 'GET',
-          });
+          const data = await resp.json();
 
-          if (!response.ok) {
+          if (!resp.ok) {
             setStatus(
-              'Erro ao verificar seu pedido. Tente novamente em alguns instantes.',
-              'error'
+              "Erro ao verificar seu pedido. Tente recarregar a página em alguns instantes.",
+              "error"
             );
-            setLoading(false);
+            console.error("Erro /api/download:", data);
             return;
           }
-
-          const data = await response.json();
 
           if (!data.found) {
             setStatus(
-              'Não encontrei nenhum pedido para este e-mail. Verifique se digitou corretamente ou tente outro endereço que você usa com frequência.',
-              'error'
+              "Não encontrei nenhum pedido para este e-mail. Verifique se digitou corretamente na hora da compra.",
+              "error"
             );
-            setLoading(false);
+            msgEl.textContent =
+              "Se você tiver certeza de que pagou, por favor me chame por e-mail com o comprovante.";
             return;
           }
 
+          // Pagamento ainda não liberado
           if (!data.allowed || !data.ebookUrl) {
-            const statusTexto = data.status || data.mpStatus || 'pendente';
             setStatus(
-              'Seu pagamento ainda não foi confirmado (status: ' +
-                statusTexto +
-                '). Assim que for aprovado, o download será liberado automaticamente aqui.',
-              'info'
+              "Seu pagamento ainda está em análise ou não foi aprovado (status: " +
+                (data.mpStatus || data.status || "pendente") +
+                ").",
+              "warn"
             );
-            setLoading(false);
+            msgEl.textContent =
+              "Assim que o pagamento for confirmado pelo sistema, você poderá voltar a esta página para baixar o e-book.";
             return;
           }
 
-          // Tudo certo: download liberado
+          // Tudo certo — download liberado
           setStatus(
-            'Download liberado! O e-book deve abrir em uma nova aba. Se não abrir, use o botão abaixo.',
-            'success'
+            "Pagamento confirmado! Vamos abrir o e-book automaticamente.",
+            "ok"
           );
+          titleEl.textContent =
+            "Obrigada por confiar no meu trabalho. Seu e-book está liberado!";
+          msgEl.textContent =
+            "O PDF deve abrir em instantes. Se não abrir, use o botão abaixo para abrir novamente.";
 
-          downloadLink.href = data.ebookUrl;
-          linkWrapper.classList.remove('hidden');
+          const ebookUrl = data.ebookUrl;
 
-          // Redireciona automaticamente para o PDF
-          window.location.href = data.ebookUrl;
-        } catch (error) {
-          console.error('Erro ao chamar /api/download:', error);
+          // Botão para reabrir caso o navegador bloqueie o redirect
+          retryBtn.classList.remove("hidden");
+          retryBtn.onclick = () => {
+            window.open(ebookUrl, "_blank");
+          };
+
+          // Redireciona automaticamente para o PDF (pequeno delay para a pessoa ler o “Obrigada”)
+          setTimeout(() => {
+            window.location.href = ebookUrl;
+          }, 1200);
+        } catch (err) {
+          console.error("Erro inesperado ao chamar /api/download:", err);
           setStatus(
-            'Ocorreu um erro inesperado ao tentar liberar seu download. Tente novamente em alguns minutos.',
-            'error'
+            "Ocorreu um erro inesperado ao tentar liberar seu download. Tente recarregar a página em alguns minutos.",
+            "error"
           );
-        } finally {
-          setLoading(false);
         }
-      });
+      }
+
+      document.addEventListener("DOMContentLoaded", iniciarDownload);
     </script>
   </body>
 </html>
