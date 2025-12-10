@@ -31,7 +31,7 @@ export default async function handler(req, res) {
     // 1) Monta a query base
     let query = supabaseAdmin
       .from('ebook_order')
-      .select('id, status, download_allowed, mp_status, created_at')
+      .select('id, status, download_allowed, mp_status')
       .eq('email', email);
 
     // Se vier um orderId específico, filtra por ele
@@ -39,8 +39,9 @@ export default async function handler(req, res) {
       query = query.eq('id', orderId);
     }
 
-    // Ordena para pegar o pedido mais recente
-    query = query.order('created_at', { ascending: false }).limit(1);
+    // Ordena para pegar o pedido "mais recente"
+    // (sem created_at, usamos id como critério estável)
+    query = query.order('id', { ascending: false }).limit(1);
 
     const { data, error } = await query;
 

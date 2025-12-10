@@ -11,9 +11,9 @@ import { supabaseAdmin } from '../lib/supabaseAdmin.js';
  */
 
 // Ajuste estes valores conforme o que você criou no Supabase Storage
-const EBOOK_BUCKET = process.env.EBOOK_BUCKET || 'ebooks';
+const EBOOK_BUCKET = process.env.EBOOK_BUCKET || 'ebook_musica_medicina';
 const EBOOK_MAIN_PATH =
-  process.env.EBOOK_MAIN_PATH || 'musica-ansiedade/ebook-musica-ansiedade.pdf';
+  process.env.EBOOK_MAIN_PATH || 'musica-e-ansiedade.pdf';
 
 // Tempo de expiração do link (em segundos) – aqui 2 horas
 const SIGNED_URL_EXPIRES_IN = 60 * 60 * 2;
