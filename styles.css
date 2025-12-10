@@ -268,27 +268,35 @@ a {
   justify-content: center;
 }
 
+/* container só para posicionar o glow */
 .cover-card {
   position: relative;
-  border-radius: 1.8rem;
-  padding: 1.9rem 1.9rem 2.3rem;
-  background: radial-gradient(circle at top left, #fdf7eb 0%, #f3f5f5 55%, #e1f2f2 100%);
-  box-shadow: 0 32px 70px rgba(58, 85, 88, 0.45);
+  display: inline-block;
+  /* sem fundo e sem padding para não parecer moldura */
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
 }
 
+/* capa do livro ocupando praticamente todo o espaço */
 .cover-image {
-  border-radius: 0.9rem;
-  width: 260px;
+  display: block;
+  width: 340px;       /* ajuste fino se quiser maior/menor */
+  height: auto;
+  border-radius: 0.75rem;
 }
 
-/* luz suave atrás do livro */
+/* apenas o esfumaçado/gradiente atrás do livro */
 .cover-gradient {
   position: absolute;
-  inset: 8%;
-  border-radius: 2rem;
-  background: radial-gradient(circle at 20% 0%, rgba(244, 215, 150, 0.7), transparent 60%),
-    radial-gradient(circle at 80% 80%, rgba(183, 234, 219, 0.9), transparent 65%);
-  opacity: 0.7;
+  inset: -18%; /* aumenta o glow em volta do livro */
+  border-radius: 2.5rem;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(244, 215, 150, 0.9), transparent 60%),
+    radial-gradient(circle at 80% 80%, rgba(183, 234, 219, 1), transparent 65%);
+  box-shadow: 0 38px 90px rgba(71, 105, 110, 0.55);
+  opacity: 0.9;
   z-index: -1;
 }
 
@@ -505,30 +513,46 @@ a {
 }
 
 /* ---------------------------------------
-   SOBRE A AUTORA
+   FOTO DA AUTORA – SEM MOLDURA + GLOW SUAVE
 --------------------------------------- */
-.about-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  gap: 2.5rem;
+.about-photo {
+  display: flex;
+  justify-content: center;
   align-items: center;
 }
 
 .about-photo-wrap {
-  border-radius: 1.6rem;
-  padding: 0.55rem;
-  background: linear-gradient(135deg, #e9f3f2, #fce8c7);
-  box-shadow: 0 26px 50px rgba(112, 137, 135, 0.35);
+  position: relative;
+  display: inline-block;
+  padding: 0;             /* remove a moldura */
+  background: transparent; 
+  border-radius: 0.75rem;
 }
 
 .about-photo-wrap img {
-  border-radius: 1.3rem;
+  display: block;
+  width: 330px;           /* ajuste o tamanho da foto */
+  height: auto;
+  border-radius: 0.75rem;  /* cantos arredondados suaves */
 }
 
-.about-text p {
-  font-size: 0.95rem;
-  color: #5f7e83;
-  margin-bottom: 0.8rem;
+/* Glow elegante atrás da foto */
+.about-photo-wrap::before {
+  content: "";
+  position: absolute;
+  inset: -18%;
+  z-index: -1;
+  border-radius: 2.5rem;
+
+  background:
+    radial-gradient(circle at 0% 0%, rgba(244, 226, 169, 0.8), transparent 60%),
+    radial-gradient(circle at 90% 90%, rgba(183, 234, 219, 0.9), transparent 65%);
+
+  box-shadow: 
+    0 45px 95px rgba(120, 145, 145, 0.45),
+    0 15px 35px rgba(0, 0, 0, 0.25);
+
+  opacity: 0.9;
 }
 
 /* ---------------------------------------
