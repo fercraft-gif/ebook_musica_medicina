@@ -310,18 +310,20 @@ a {
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: 18px;
-  background: radial-gradient(
-    circle at 20% 50%,
-    rgba(0, 0, 0, 0.25),
-    transparent 70%
-  );
-  transform: translateX(-14px) translateY(6px) rotateY(10deg);
-  filter: blur(14px);
-  opacity: 0.45;
   pointer-events: none;
-}
 
+  /* sombra lateral suave, parecida com luz ambiente real */
+  background: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 0.22),
+    rgba(0, 0, 0, 0.06) 35%,
+    transparent 80%
+  );
+
+  transform: translateX(-18px) translateY(3px) scaleY(0.98);
+  filter: blur(12px);
+  opacity: 0.45;
+}
 
 /* HOVER – FLUTUAR UM POUCO PRA FRENTE */
 .hero-cover:hover .cover-card {
@@ -332,20 +334,19 @@ a {
 /* SOMBRA NO CHÃO – FAZ O LIVRO PARECER ELEVADO */
 .cover-gradient {
   position: absolute;
-  bottom: -8px;
+  bottom: -12px;
   left: 50%;
   transform: translateX(-50%);
-  width: min(260px, 60vw);
-  height: 60px;
-  border-radius: 999px;
+  width: 70%;
+  height: 40px;
+  border-radius: 50%;
   background: radial-gradient(
-    circle at 50% 50%,
-    rgba(0, 0, 0, 0.4),
+    ellipse at center,
+    rgba(0, 0, 0, 0.28),
     transparent 70%
   );
-  filter: blur(8px);
-  opacity: 0.75;
-  pointer-events: none;
+  filter: blur(18px);
+  opacity: 0.50;
 }
 
 /* AJUSTE EM TELAS MUITO PEQUENAS */
