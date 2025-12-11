@@ -173,16 +173,18 @@
           </p>
         </div>
 
-        <!-- MOCKUP CAPA -->
-        <div class="hero-cover">
-          <div class="cover-card">
-            <div class="cover-gradient"></div> <!-- glow atrás -->
-            <img src="assets/ebook-cover.png" alt="Capa do e-book Música &amp; Ansiedade" class="cover-image"/>
-            <div class="cover-gradient"></div>
-          </div>
-        </div>
-      </div>
-    </section>
+       <!-- MOCKUP CAPA -->
+   <div class="hero-cover">
+     <div class="cover-card">
+       <img
+         src="assets/ebook-cover.png"
+         alt="Capa do e-book Música &amp; Ansiedade"
+         class="cover-image"
+       />
+       <div class="cover-shadow-3d"></div>
+     </div>
+   </div>
+
 
     <!-- BENEFÍCIOS PRINCIPAIS -->
     <section id="beneficios" class="section">
@@ -286,51 +288,56 @@
     </section>
 
     <!-- COMO FUNCIONA A COMPRA -->
-    <section class="section section-alt">
-      <div class="container">
-        <h2 class="section-title">Como comprar?</h2>
+   <section class="section section-alt" id="como-comprar">
+  <div class="container">
+    <h2 class="section-title">Como comprar?</h2>
 
-        <div class="steps-grid">
-          <div class="step">
-            <div class="step-header">
-               <span class="step-number">1</span>
-            <h3>Escolha a forma de pagamento</h3>
-            </div>
-            <p>
-              Clique em “Pagar via PIX” ou “Pagar com Cartão de Crédito”. Você será direcionada(o) para um checkout seguro.</p>
-            </p>
-          </div>
-
-          <div class="step">
-            <div class="step-header"></div>
-              <div class="step-number">2</div>
-            <h3>Confirme o pagamento</h3>
-            </div>
-            <p>
-              Finalize o pagamento e, em poucos instantes, a confirmação é feita automaticamente pelo sistema.</p>
-           </p>
-            </div>
-
-          <div class="step">
-            <div class="step-header"></div>
-              <div class="step-number">3</div>
-            <h3>Receba o e-book</h3>
-            </div>
-            <p>
-              Após a confirmação, você recebe o link para baixar o PDF do e-book e o material bônus no seu e-mail cadastrado.</p>
-            </p>
-            </div>
+    <div class="steps-grid">
+      <!-- PASSO 1 -->
+      <div class="step">
+        <div class="step-header">
+          <span class="step-number">1</span>
+          <h3>Escolha a forma de pagamento</h3>
         </div>
-
-        <div class="cta-center">
-          <!-- SEGUNDO BOTÃO CONTROLADO PELO SCRIPT (PIX) -->
-          <button id="pay-pix-secondary" type="button" class="btn btn-primary">
-            QUERO COMEÇAR A EXPERIÊNCIA
-          </button>
-        </div>
-
+        <p>
+          Clique em “Pagar via PIX” ou “Pagar com Cartão de Crédito”.
+          Você será direcionada(o) para um checkout seguro.
+        </p>
       </div>
-    </section>
+
+      <!-- PASSO 2 -->
+      <div class="step">
+        <div class="step-header">
+          <span class="step-number">2</span>
+          <h3>Confirme o pagamento</h3>
+        </div>
+        <p>
+          Finalize o pagamento e, em poucos instantes, a confirmação
+          é feita automaticamente pelo sistema.
+        </p>
+      </div>
+
+      <!-- PASSO 3 -->
+      <div class="step">
+        <div class="step-header">
+          <span class="step-number">3</span>
+          <h3>Receba o e-book</h3>
+        </div>
+        <p>
+          Após a confirmação, você recebe o link para baixar o PDF
+          do e-book e o material bônus no seu e-mail cadastrado.
+        </p>
+      </div>
+    </div>
+
+    <!-- BOTÃO FINAL CENTRALIZADO -->
+    <div class="cta-center">
+      <button id="pay-card-final" type="button" class="btn btn-primary">
+        QUERO COMEÇAR A EXPERIÊNCIA
+      </button>
+    </div>
+  </div>
+</section>
 
     <!-- SOBRE A AUTORA -->
     <section id="sobre" class="section section-alt">

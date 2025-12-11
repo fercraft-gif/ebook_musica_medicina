@@ -261,38 +261,58 @@ a {
   font-size: 0.82rem;
   color: #2f6f71;
 }
+/* ===========================
+   CAPA DO LIVRO — MOCKUP 3D CLEAN
+=========================== */
 
-/* CAPA DO LIVRO COM GLOW */
 .hero-cover {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-end;
+  position: relative;
 }
 
+/* container apenas para posicionar o livro */
 .cover-card {
   position: relative;
   display: inline-block;
+  padding: 0;
+  background: transparent;   /* sem cartão atrás */
 }
 
+/* LIVRO em si */
 .cover-image {
-  width: 340px;
+  width: 300px;              /* tamanho ajustado */
   height: auto;
-  border-radius: 1.4rem;
+  display: block;
+  border-radius: 0.5rem;     /* arredonda um pouco as quinas da foto */
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.35),     /* sombra principal */
+    0 0 40px rgba(214, 239, 236, 0.8);   /* glow suave na borda pra “sumir” no fundo */
   position: relative;
-  z-index: 2; /* imagem sempre acima do glow */
+  z-index: 2;
 }
 
-/* Glow suave atrás da capa, disfarçando o amarelo */
-.cover-gradient {
+/* SOMBRA ELÍPTICA VERDE-ESCURA EMBAIXO (efeito flutuando) */
+.cover-shadow-3d {
   position: absolute;
-  inset: -22%;
+  left: 50%;
+  bottom: -18px;   /* distância abaixo do livro */
+  transform: translateX(-50%);
+  width: 80%;      /* largura da sombra */
+  height: 32px;    /* altura da sombra */
+
+  background: radial-gradient(
+    ellipse at center,
+    rgba(5, 63, 65, 0.65) 0%,
+    rgba(5, 63, 65, 0.25) 45%,
+    rgba(5, 63, 65, 0.0) 80%
+  );
+
+  filter: blur(2px);
+  opacity: 0.95;
   z-index: 1;
-  border-radius: 2.8rem;
-  background:
-    radial-gradient(circle at 50% 40%, rgba(216, 238, 232, 0.9), transparent 65%),
-    radial-gradient(circle at 70% 90%, rgba(184, 225, 218, 0.7), transparent 75%);
-  filter: blur(32px);
-  opacity: 0.85;
+  pointer-events: none;
 }
 
 /* ---------------------------------------
