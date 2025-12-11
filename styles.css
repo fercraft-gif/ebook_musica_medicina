@@ -277,48 +277,51 @@ a {
 }
 
 /* CARTÃO 3D DA CAPA */
+/* CARTÃO 3D DA CAPA */
 .cover-card {
   position: relative;
-  width: min(320px, 70vw);   /* responsivo */
+  width: min(340px, 75vw);   /* um pouco maior e responsivo */
   aspect-ratio: 3 / 4;       /* formato livro */
   transform-style: preserve-3d;
   transform-origin: center left;
-  transform: rotateY(-18deg) rotateX(4deg);
+  /* menos inclinado pra não parecer distorcido */
+  transform: rotateY(-12deg) rotateX(2deg) translateZ(0);
   transition:
     transform 0.6s ease,
     filter 0.6s ease;
   filter: drop-shadow(0 26px 40px rgba(0, 0, 0, 0.45));
 }
 
+
 /* CAPA EM SI (imagem de fundo) */
 .cover-image {
   position: absolute;
   inset: 0;
   background-image: url("assets/ebook-cover.webp");
-  background-size: cover;
-  background-position: center;
+  background-size: contain;          /* mostra a capa inteira */
+  background-position: center center;
   background-repeat: no-repeat;
   border-radius: 18px;
   overflow: hidden;
 }
 
-/* “ESPIA” LATERAL – PARECE LOMBADA DO LIVRO */
+/* SOMBRA LATERAL SUAVE */
 .cover-card::before {
   content: "";
   position: absolute;
-  top: 5%;
-  bottom: 5%;
-  left: -12px;
-  width: 20px;
-  border-radius: 10px 0 0 10px;
-  background: linear-gradient(
-    90deg,
-    rgba(10, 10, 10, 0.65),
-    rgba(0, 0, 0, 0.2)
+  inset: 0;
+  border-radius: 18px;
+  background: radial-gradient(
+    circle at 20% 50%,
+    rgba(0, 0, 0, 0.25),
+    transparent 70%
   );
-  transform: translateZ(-6px) skewY(-2deg);
-  opacity: 0.9;
+  transform: translateX(-14px) translateY(6px) rotateY(10deg);
+  filter: blur(14px);
+  opacity: 0.45;
+  pointer-events: none;
 }
+
 
 /* HOVER – FLUTUAR UM POUCO PRA FRENTE */
 .hero-cover:hover .cover-card {
