@@ -2,11 +2,13 @@
   "name": "octopusaxis-ebook",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "build": "echo \"no build\""
+    "build": "echo \"no build\"",
+    "start": "echo \"no server to start\""
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.6",
-    "mercadopago": "^1.5.16"
+    "@supabase/supabase-js": "2.39.6",
+    "mercadopago": "1.5.16"
   }
 }
