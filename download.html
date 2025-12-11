@@ -208,10 +208,25 @@
 
         try {
           const resp = await fetch(
-            "/api/download?email=" + encodeURIComponent(email)
+            window.location.origin +
+              "/api/download?email=" +
+              encodeURIComponent(email),
+            {
+              method: "GET",
+              cache: "no-store",
+            }
           );
 
-          const data = await resp.json();
+          let data;
+          try {
+            data = await resp.json();
+          } catch {
+            setStatus(
+              "Não foi possível interpretar a resposta do servidor. Tente recarregar a página.",
+              "error"
+            );
+            return;
+          }
 
           if (!resp.ok) {
             setStatus(

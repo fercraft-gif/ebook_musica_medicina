@@ -89,14 +89,19 @@ export default async function handler(req, res) {
           ],
         };
 
+    // 🔗 URL base da página de download
+    const baseDownloadUrl = 'https://octopusaxisebook.com/download.html';
+    const downloadUrlWithEmail =
+      baseDownloadUrl + '?email=' + encodeURIComponent(email);
+
     const preferenceData = {
       external_reference: orderId, // casa com a coluna id da tabela
       auto_return: 'approved',
       back_urls: {
-        // 👉 Agora tudo volta para a página de download
-        success: 'https://octopusaxisebook.com/download.html',
-        pending: 'https://octopusaxisebook.com/download.html',
-        failure: 'https://octopusaxisebook.com/download.html',
+        // Agora todas as voltas trazem o e-mail na query
+        success: downloadUrlWithEmail,
+        pending: downloadUrlWithEmail,
+        failure: downloadUrlWithEmail,
       },
       items: [
         {
