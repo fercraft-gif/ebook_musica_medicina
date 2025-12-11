@@ -287,14 +287,13 @@ a {
   height: auto;
   display: block;
   border-radius: 0.5rem;
-
-  /* sombra mais suave, sem pontas brancas */
   box-shadow:
-    0 16px 40px rgba(0, 0, 0, 0.35),
-    0 0 30px rgba(10, 40, 45, 0.35); /* tom mais escuro, neutro */
-
+    0 16px 40px rgba(0, 0, 0, 0.35);
   position: relative;
   z-index: 2;
+
+  /* 🔪 corta as pontas brancas do topo e do rodapé */
+  clip-path: inset(10px 0 18px 0); /* top right bottom left */
 }
 
 /* SOMBRA ELÍPTICA VERDE-ESCURA EMBAIXO (efeito flutuando) */
