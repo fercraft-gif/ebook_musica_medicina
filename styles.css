@@ -283,13 +283,16 @@ a {
 
 /* LIVRO em si */
 .cover-image {
-  width: 300px;              /* tamanho ajustado */
+  width: 300px;
   height: auto;
   display: block;
-  border-radius: 0.5rem;     /* arredonda um pouco as quinas da foto */
+  border-radius: 0.5rem;
+
+  /* sombra mais suave, sem pontas brancas */
   box-shadow:
-    0 16px 40px rgba(0, 0, 0, 0.35),     /* sombra principal */
-    0 0 40px rgba(214, 239, 236, 0.8);   /* glow suave na borda pra “sumir” no fundo */
+    0 16px 40px rgba(0, 0, 0, 0.35),
+    0 0 30px rgba(10, 40, 45, 0.35); /* tom mais escuro, neutro */
+
   position: relative;
   z-index: 2;
 }
