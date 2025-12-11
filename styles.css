@@ -266,57 +266,96 @@ a {
    CAPA DO LIVRO — MOCKUP 3D CLEAN
 =========================== */
 
+/* CONTAINER DA CAPA */
 .hero-cover {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: 1rem;
+  perspective: 1400px; /* dá profundidade 3D */
 }
 
-/* container apenas para posicionar o livro */
+/* CARTÃO 3D DA CAPA */
 .cover-card {
   position: relative;
-  display: inline-block;
-  padding: 0;
-  background: transparent;   /* sem cartão atrás */
+  width: min(320px, 70vw);   /* responsivo */
+  aspect-ratio: 3 / 4;       /* formato livro */
+  transform-style: preserve-3d;
+  transform-origin: center left;
+  transform: rotateY(-18deg) rotateX(4deg);
+  transition:
+    transform 0.6s ease,
+    filter 0.6s ease;
+  filter: drop-shadow(0 26px 40px rgba(0, 0, 0, 0.45));
 }
 
-/* LIVRO em si */
+/* CAPA EM SI (imagem de fundo) */
 .cover-image {
-  width: 300px;
-  height: auto;
-  display: block;
-  border-radius: 0.5rem;
-  box-shadow:
-    0 16px 40px rgba(0, 0, 0, 0.35);
-  position: relative;
-  z-index: 2;
-
-  /* 🔪 corta as pontas brancas do topo e do rodapé */
-  clip-path: inset(10px 0 18px 0); /* top right bottom left */
+  position: absolute;
+  inset: 0;
+  background-image: url("assets/ebook-cover.webp");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 18px;
+  overflow: hidden;
 }
 
-/* SOMBRA ELÍPTICA VERDE-ESCURA EMBAIXO (efeito flutuando) */
-.cover-shadow-3d {
+/* “ESPIA” LATERAL – PARECE LOMBADA DO LIVRO */
+.cover-card::before {
+  content: "";
   position: absolute;
-  left: 50%;
-  bottom: -18px;   /* distância abaixo do livro */
-  transform: translateX(-50%);
-  width: 80%;      /* largura da sombra */
-  height: 32px;    /* altura da sombra */
-
-  background: radial-gradient(
-    ellipse at center,
-    rgba(5, 63, 65, 0.65) 0%,
-    rgba(5, 63, 65, 0.25) 45%,
-    rgba(5, 63, 65, 0.0) 80%
+  top: 5%;
+  bottom: 5%;
+  left: -12px;
+  width: 20px;
+  border-radius: 10px 0 0 10px;
+  background: linear-gradient(
+    90deg,
+    rgba(10, 10, 10, 0.65),
+    rgba(0, 0, 0, 0.2)
   );
+  transform: translateZ(-6px) skewY(-2deg);
+  opacity: 0.9;
+}
 
-  filter: blur(2px);
-  opacity: 0.95;
-  z-index: 1;
+/* HOVER – FLUTUAR UM POUCO PRA FRENTE */
+.hero-cover:hover .cover-card {
+  transform: translateY(-8px) rotateY(-14deg) rotateX(2deg);
+  filter: drop-shadow(0 32px 50px rgba(0, 0, 0, 0.55));
+}
+
+/* SOMBRA NO CHÃO – FAZ O LIVRO PARECER ELEVADO */
+.cover-gradient {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(260px, 60vw);
+  height: 60px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(0, 0, 0, 0.4),
+    transparent 70%
+  );
+  filter: blur(8px);
+  opacity: 0.75;
   pointer-events: none;
 }
+
+/* AJUSTE EM TELAS MUITO PEQUENAS */
+@media (max-width: 480px) {
+  .cover-card {
+    transform: rotateY(-10deg) rotateX(3deg);
+  }
+
+  .hero-cover:hover .cover-card {
+    transform: translateY(-4px) rotateY(-8deg) rotateX(2deg);
+  }
+}
+
 
 /* ---------------------------------------
    SEÇÕES GENÉRICAS
