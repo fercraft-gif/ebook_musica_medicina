@@ -126,7 +126,7 @@ export default async function handler(req, res) {
 
     switch (mpStatus) {
       case 'approved':
-        appStatus = 'paid';
+        appStatus = 'approved';
         downloadAllowed = true;
         break;
       case 'cancelled':
@@ -144,36 +144,63 @@ export default async function handler(req, res) {
     }
 
     // 4) Atualiza a linha correspondente na tabela ebook_order
-    const { error: supaUpdateError } = await supabaseAdmin
-      .from('ebook_order')
-      .update({
-        status: appStatus, // ex.: 'paid', 'pending', 'canceled'
-        download_allowed: downloadAllowed,
-        mp_status: mpStatus, // status bruto do MP (approved, pending, etc.)
-      })
-      .eq('id', externalRef);
+  const updatePayload = {
+    status: appStatus,                 // 'approved', 'pending', 'canceled'
+    download_allowed: downloadAllowed, // true/false
+    mp_status: mpStatus,               // 'approved', 'pending', etc.
+  };
 
-    if (supaUpdateError) {
-      console.error(
-        'Erro ao atualizar ebook_order via webhook:',
-        JSON.stringify(supaUpdateError, null, 2)
-      );
+  // tenta por ID (external_reference)
+  let { data: updatedById, error: errById } = await supabaseAdmin
+    .from('ebook_order')
+    .update(updatePayload)
+    .eq('id', externalRef)
+    .select('id,email,status,download_allowed');
 
-      // Ainda devolvemos 200 para não ficar loopando, mas indicando erro no JSON
+  if (errById) {
+    console.error('Erro update por id:', errById);
+    return res.status(200).json({ success: false, step: 'supabase-update-id', details: errById });
+  }
+
+  // se não atualizou nenhuma linha, tenta por e-mail do pagador (fallback)
+  if (!updatedById || updatedById.length === 0) {
+    const payerEmail = payment?.payer?.email;
+
+    console.warn('⚠️ Nenhuma linha atualizada por id. Tentando por e-mail:', payerEmail);
+
+    if (!payerEmail) {
       return res.status(200).json({
         success: false,
-        step: 'supabase-update',
-        error: 'Erro ao atualizar pedido no Supabase.',
-        details: supaUpdateError.message || supaUpdateError,
+        step: 'supabase-update-fallback',
+        error: 'Sem payer.email para fallback e external_reference não casou com id.',
       });
     }
 
-    console.log('📦 Pedido atualizado com sucesso no Supabase via webhook:', {
-      orderId: externalRef,
-      appStatus,
-      downloadAllowed,
-      mpStatus,
-    });
+    let { data: updatedByEmail, error: errByEmail } = await supabaseAdmin
+      .from('ebook_order')
+      .update(updatePayload)
+      .eq('email', payerEmail)
+      .select('id,email,status,download_allowed');
+
+    if (errByEmail) {
+      console.error('Erro update por email:', errByEmail);
+      return res.status(200).json({ success: false, step: 'supabase-update-email', details: errByEmail });
+    }
+
+    if (!updatedByEmail || updatedByEmail.length === 0) {
+      return res.status(200).json({
+        success: false,
+        step: 'supabase-update-none',
+        error: 'Não encontrei pedido nem por id (external_reference) nem por email (payer.email).',
+        externalRef,
+        payerEmail,
+      });
+    }
+
+    console.log('✅ Pedido atualizado por e-mail:', updatedByEmail[0]);
+  } else {
+    console.log('✅ Pedido atualizado por id:', updatedById[0]);
+  }
 
     // 5) Responde 200 para o Mercado Pago
     return res.status(200).json({

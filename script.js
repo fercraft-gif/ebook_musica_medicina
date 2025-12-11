@@ -84,7 +84,7 @@ function iniciarCheckout() {
   modalClose?.addEventListener("click", closeModal);
 
   // Fechar clicando fora
-  modal.addEventListener("click", (e) => {
+  modal?.addEventListener("click", (e) => {
     if (e.target === modal) closeModal();
   });
 
@@ -94,13 +94,10 @@ function iniciarCheckout() {
   checkoutForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    if (isSubmitting) {
-      // já está processando, ignora novo clique
-      return;
-    }
+    if (isSubmitting) return;
 
-    const name = buyerNameInput.value.trim();
-    const email = buyerEmailInput.value.trim();
+    const name = buyerNameInput?.value?.trim();
+    const email = buyerEmailInput?.value?.trim();
 
     if (!name || !email) {
       modalMessage.textContent = "Preencha nome e e-mail para continuar.";
@@ -146,10 +143,11 @@ function iniciarCheckout() {
         return;
       }
 
-      // Guarda e-mail para página obrigado.html (se quiser usar no futuro)
-      try {
-        localStorage.setItem("buyer_email", email);
-      } catch {}
+      // ✅ Se já comprou, o backend devolve redirectTo para ir direto ao download
+      if (result.alreadyPurchased && result.redirectTo) {
+        window.location.href = result.redirectTo;
+        return;
+      }
 
       if (!result.initPoint) {
         modalMessage.textContent =
