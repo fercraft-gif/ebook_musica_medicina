@@ -10,7 +10,7 @@ import { supabaseAdmin } from '../lib/supabaseAdmin.js';
  * - Retorna as infos em JSON para o front abrir automaticamente
  */
 
-// Ajuste estes valores conforme o que você criou no Supabase Storage
+// ⚠ CONFIRA estes valores no Supabase Storage
 const EBOOK_BUCKET = process.env.EBOOK_BUCKET || 'ebook_musica_medicina';
 const EBOOK_MAIN_PATH =
   process.env.EBOOK_MAIN_PATH || 'musica-e-ansiedade.pdf';
@@ -33,24 +33,32 @@ export default async function handler(req, res) {
       });
     }
 
+    const emailClean = String(email).trim();
+
+    console.log('🔍 [/api/download] Buscando pedido para:', {
+      email: emailClean,
+      orderId: orderId || null,
+    });
+
     // 1) Busca o pedido do usuário (ou um específico, se orderId vier)
     let query = supabaseAdmin
       .from('ebook_order')
-      .select('id, status, download_allowed, mp_status')
-      .eq('email', email.trim());
+      .select('id, status, download_allowed, mp_status, email')
+      // ilike deixa a busca de e-mail case-insensitive (Nanda / nanda)
+      .ilike('email', emailClean);
 
     if (orderId) {
-      query = query.eq('id', orderId.trim());
+      query = query.eq('id', String(orderId).trim());
     }
 
-    // como não temos created_at, apenas limitamos a 1 registro
-    query = query.limit(1);
+    // como não temos created_at, ordena pelo id para pegar o mais "recente"
+    query = query.order('id', { ascending: false }).limit(1);
 
     const { data, error } = await query;
 
     if (error) {
       console.error(
-        'Erro Supabase ao buscar pedido em /api/download:',
+        '❌ Erro Supabase ao buscar pedido em /api/download:',
         JSON.stringify(error, null, 2)
       );
 
@@ -62,6 +70,10 @@ export default async function handler(req, res) {
     }
 
     if (!data || data.length === 0) {
+      console.warn('⚠ Nenhum pedido encontrado para este e-mail.', {
+        email: emailClean,
+      });
+
       return res.status(404).json({
         found: false,
         allowed: false,
@@ -71,8 +83,16 @@ export default async function handler(req, res) {
 
     const order = data[0];
 
+    console.log('📦 Pedido encontrado em /api/download:', order);
+
     // 2) Se ainda não liberou download, apenas informa status
     if (!order.download_allowed) {
+      console.log('⏳ Download ainda não liberado para este pedido:', {
+        id: order.id,
+        status: order.status,
+        mp_status: order.mp_status,
+      });
+
       return res.status(200).json({
         found: true,
         allowed: false,
@@ -85,6 +105,11 @@ export default async function handler(req, res) {
     }
 
     // 3) Gera URL assinada do PDF principal
+    console.log('🔐 Gerando signed URL para o e-book:', {
+      bucket: EBOOK_BUCKET,
+      path: EBOOK_MAIN_PATH,
+    });
+
     const { data: ebookSigned, error: ebookSignedError } =
       await supabaseAdmin.storage
         .from(EBOOK_BUCKET)
@@ -92,7 +117,7 @@ export default async function handler(req, res) {
 
     if (ebookSignedError) {
       console.error(
-        'Erro ao criar signed URL do e-book principal:',
+        '❌ Erro ao criar signed URL do e-book principal:',
         JSON.stringify(ebookSignedError, null, 2)
       );
 
@@ -107,7 +132,7 @@ export default async function handler(req, res) {
 
     if (!ebookUrl) {
       console.error(
-        'Signed URL do e-book veio vazio em /api/download:',
+        '❌ Signed URL do e-book veio vazio em /api/download:',
         JSON.stringify(ebookSigned, null, 2)
       );
 
@@ -116,6 +141,8 @@ export default async function handler(req, res) {
         error: 'Não foi possível gerar o link de download do e-book.',
       });
     }
+
+    console.log('✅ Signed URL gerada com sucesso.');
 
     // 4) Retorna dados para o front
     return res.status(200).json({
@@ -128,7 +155,7 @@ export default async function handler(req, res) {
       expiresInSeconds: SIGNED_URL_EXPIRES_IN,
     });
   } catch (err) {
-    console.error('Erro inesperado em /api/download:', err);
+    console.error('🔥 Erro inesperado em /api/download:', err);
 
     return res.status(500).json({
       step: 'unknown',

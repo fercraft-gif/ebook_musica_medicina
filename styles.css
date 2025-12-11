@@ -9,10 +9,10 @@
 
 html,
 body {
-  font-family: "Inter", "Inter Tight", system-ui, -apple-system, BlinkMacSystemFont,
+  font-family: "Inter Tight", "Inter", system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
-  color: #184047; /* texto principal */
-  background: #f5faf9; /* fundo geral bem claro */
+  color: #2f6f71;        /* texto principal em verde suave */
+  background: #f5faf9;   /* fundo geral claro */
   line-height: 1.6;
 }
 
@@ -91,7 +91,7 @@ a {
 
 .logo-sub {
   font-weight: 600;
-  color: #184047;
+  color: #123f43; /* segue cor de título */
 }
 
 .main-nav {
@@ -101,7 +101,7 @@ a {
 }
 
 .main-nav a {
-  color: #45747b;
+  color: #2f6f71; /* mesmo tom do texto */
   font-weight: 500;
   position: relative;
 }
@@ -159,19 +159,19 @@ a {
   font-family: "Inter Tight", "Inter", sans-serif;
   font-size: 3rem;
   line-height: 1.1;
-  color: #163641;
+  color: #123f43;
   margin-bottom: 1.2rem;
 }
 
 .hero-subtitle {
   font-size: 0.98rem;
-  color: #526f74;
+  color: #2f6f71;
   margin-bottom: 1rem;
 }
 
 .hero-tagline {
   font-size: 0.95rem;
-  color: #6d8a8e;
+  color: #2f6f71;
   margin-bottom: 1.8rem;
 }
 
@@ -184,7 +184,7 @@ a {
   padding: 1.75rem 2rem;
   border-radius: 1.35rem;
   background: linear-gradient(145deg, #e2f3f6, #f4f7f2);
-  box-shadow: 0 20px 40px rgba(35, 86, 97, 0.20);
+  box-shadow: 0 20px 40px rgba(35, 86, 97, 0.2);
 }
 
 .price-label {
@@ -224,6 +224,8 @@ a {
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   white-space: nowrap;
+  font-family: "Inter Tight", "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
 }
 
 .btn-primary {
@@ -257,35 +259,40 @@ a {
 .hero-notice {
   margin-top: 1.1rem;
   font-size: 0.82rem;
-  color: #7c9598;
+  color: #2f6f71;
 }
 
-/* Glow suave atrás da capa para disfarçar o amarelo */
-.hero-cover .cover-card {
+/* CAPA DO LIVRO COM GLOW */
+.hero-cover {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.cover-card {
   position: relative;
+  display: inline-block;
 }
 
-.hero-cover .cover-gradient {
-  position: absolute;
-  inset: -20%;             /* aumenta a área do glow sem criar moldura */
-  z-index: -1;             /* mantém atrás da capa */
-  border-radius: 2.5rem;
-  
-  background:
-    radial-gradient(
-      circle at 50% 40%,
-      rgba(217, 239, 236, 0.9) 0%,   /* verde muito claro da paleta */
-      rgba(217, 239, 236, 0.6) 40%,
-      rgba(217, 239, 236, 0) 75%
-    ),
-    radial-gradient(
-      circle at 30% 90%,
-      rgba(182, 226, 217, 0.7),
-      transparent 70%
-    );
+.cover-image {
+  width: 340px;
+  height: auto;
+  border-radius: 1.4rem;
+  position: relative;
+  z-index: 2; /* imagem sempre acima do glow */
+}
 
-  filter: blur(18px);      /* esfumaçado elegante */
-  opacity: 0.95;           /* evita destacar demais */
+/* Glow suave atrás da capa, disfarçando o amarelo */
+.cover-gradient {
+  position: absolute;
+  inset: -22%;
+  z-index: 1;
+  border-radius: 2.8rem;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(216, 238, 232, 0.9), transparent 65%),
+    radial-gradient(circle at 70% 90%, rgba(184, 225, 218, 0.7), transparent 75%);
+  filter: blur(32px);
+  opacity: 0.85;
 }
 
 /* ---------------------------------------
@@ -303,7 +310,7 @@ a {
 .section-title {
   font-family: "Inter Tight", "Inter", sans-serif;
   font-size: 2rem;
-  color: #184047;
+  color: #123f43;
   margin-bottom: 1rem;
 }
 
@@ -314,7 +321,7 @@ a {
 .section-intro {
   max-width: 640px;
   font-size: 0.98rem;
-  color: #607f84;
+  color: #2f6f71;
   margin-bottom: 2rem;
 }
 
@@ -338,12 +345,12 @@ a {
 .card h3 {
   font-size: 1rem;
   margin-bottom: 0.5rem;
-  color: #184047;
+  color: #123f43;
 }
 
 .card p {
   font-size: 0.9rem;
-  color: #627f84;
+  color: #2f6f71;
 }
 
 /* ---------------------------------------
@@ -353,7 +360,7 @@ a {
   display: grid;
   grid-template-columns: 1.1fr 1fr;
   gap: 2.5rem;
-  align-items: flex-start;
+  align-items: center; /* centraliza verticalmente o card lateral */
 }
 
 .feature-list li {
@@ -361,7 +368,7 @@ a {
   gap: 0.6rem;
   margin-bottom: 0.65rem;
   font-size: 0.9rem;
-  color: #5f7c81;
+  color: #2f6f71;
 }
 
 .dot {
@@ -378,16 +385,18 @@ a {
   padding: 1.5rem 1.7rem;
   border: 1px solid rgba(190, 212, 211, 0.9);
   box-shadow: 0 20px 40px rgba(120, 154, 151, 0.2);
+  margin: 0 auto; /* garante centralização na coluna */
 }
 
 .info-box h3 {
   font-size: 1.05rem;
   margin-bottom: 0.7rem;
+  color: #123f43;
 }
 
 .info-box ul {
   font-size: 0.9rem;
-  color: #5f7d82;
+  color: #2f6f71;
   margin-bottom: 0.75rem;
 }
 
@@ -397,7 +406,7 @@ a {
 
 .info-note {
   font-size: 0.85rem;
-  color: #799598;
+  color: #2f6f71;
 }
 
 /* ---------------------------------------
@@ -405,13 +414,13 @@ a {
 --------------------------------------- */
 .tag-list li {
   font-size: 0.9rem;
-  color: #5f7f83;
+  color: #2f6f71;
   margin-bottom: 0.4rem;
 }
 
 .text-block {
   font-size: 0.92rem;
-  color: #607f84;
+  color: #2f6f71;
 }
 
 /* ---------------------------------------
@@ -471,7 +480,9 @@ a {
   color: #2f6f71;
 }
 
-/* GRID DA SESSÃO SOBRE A AUTORA */
+/* ---------------------------------------
+   SOBRE A AUTORA
+--------------------------------------- */
 .about-grid {
   display: grid;
   grid-template-columns: 1fr 1.2fr; /* foto menor, texto maior */
@@ -484,7 +495,7 @@ a {
   max-width: 380px;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 10px 35px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.2);
 }
 
 .about-photo-wrap img {
@@ -493,21 +504,29 @@ a {
   display: block;
 }
 
-/* TEXTO */
+.about-text {
+  max-width: 720px;
+}
+
 .about-text .section-title {
   font-size: 2rem;
   margin-bottom: 16px;
   font-weight: 700;
+  color: #123f43;
 }
 
 .about-text p {
-  line-height: 1.6;
-  font-size: 1.05rem;
-  color: #333;
-  white-space: pre-line;
+  font-family: "Inter Tight", "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  line-height: 1.7;
+  font-size: 1.02rem;
+  color: #2f6f71;
+  text-align: justify;
+  text-justify: inter-word;
+  white-space: pre-line; /* mantém suas quebras de linha manuais */
 }
 
-/* RESPONSIVO */
+/* RESPONSIVO SOBRE A AUTORA */
 @media (max-width: 900px) {
   .about-grid {
     grid-template-columns: 1fr;
@@ -517,15 +536,19 @@ a {
   .about-photo-wrap {
     margin: 0 auto;
   }
+
+  .about-text {
+    margin: 0 auto;
+    text-align: left;
+  }
 }
 
 /* ---------------------------------------
-   FAQ
+   FAQ (estrutura básica, caso use)
 --------------------------------------- */
 .faq-list {
   max-width: 720px;
 }
-
 
 /* ---------------------------------------
    CTA FINAL
@@ -552,11 +575,11 @@ a {
   gap: 0.75rem;
   justify-content: space-between;
   font-size: 0.82rem;
-  color: #708c90;
+  color: #2f6f71;
 }
 
 /* ---------------------------------------
-   RESPONSIVO
+   RESPONSIVO GERAL
 --------------------------------------- */
 @media (max-width: 960px) {
   .hero-grid {
@@ -578,13 +601,12 @@ a {
     align-items: flex-start;
   }
 
-  .testimonials-grid,
   .about-grid {
     grid-template-columns: 1fr;
   }
 
   .main-nav {
-    display: none; /* se quiser, depois fazemos menu mobile */
+    display: none; /* depois dá pra fazer menu mobile */
   }
 }
 
@@ -600,11 +622,8 @@ a {
   .price-box {
     padding: 1.4rem 1.5rem;
   }
-
-  .cover-card {
-    padding: 1.4rem 1.4rem 1.8rem;
-  }
 }
+
 /* =========================================================
    PÁGINA DE DOWNLOAD · MESMO VISUAL DA LANDING
 ========================================================= */
@@ -612,7 +631,7 @@ a {
 /* fundo geral */
 body.download-page {
   background: #f5faf9;
-  color: #184047;
+  color: #2f6f71;
 }
 
 /* cabeçalho minimalista (marca texto) */
@@ -633,7 +652,7 @@ body.download-page {
 .brand-title {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #184047;
+  color: #123f43;
 }
 
 /* área principal */
@@ -663,13 +682,13 @@ body.download-page {
 .download-title {
   font-family: "Inter Tight", "Inter", sans-serif;
   font-size: 2.1rem;
-  color: #163641;
+  color: #123f43;
   margin-bottom: 0.8rem;
 }
 
 .download-subtitle {
   font-size: 0.96rem;
-  color: #607f84;
+  color: #2f6f71;
   max-width: 640px;
   margin-bottom: 1.8rem;
 }
@@ -697,7 +716,7 @@ body.download-page {
   border-radius: 999px;
   border: 1px solid rgba(154, 187, 187, 0.9);
   background: #f5faf9;
-  color: #184047;
+  color: #2f6f71;
   font-size: 0.9rem;
 }
 
@@ -778,7 +797,7 @@ body.download-page {
   display: none !important;
 }
 
-/* responsivo */
+/* responsivo download */
 @media (max-width: 960px) {
   .download-container {
     padding: 2rem 1.6rem 2.2rem;
@@ -796,98 +815,71 @@ body.download-page {
     text-align: center;
   }
 }
-/* ===== CENTRALIZAR O BLOCO COM A COLUNA LATERAL ===== */
-.split {
-  display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: 2.5rem;
-  align-items: center; /* centraliza verticalmente o card */
-}
-
-/* Opcional: garante que o card fique realmente centrado dentro da coluna */
-.info-box {
-  background: #ffffff;
-  border-radius: 1.2rem;
-  padding: 1.5rem 1.7rem;
-  border: 1px solid rgba(190, 212, 211, 0.9);
-  box-shadow: 0 20px 40px rgba(120, 154, 151, 0.2);
-  margin: 0 auto; /* mantém centralizado se houver espaço */
-}
 /* =======================================
-   AJUSTE GLOBAL DE TIPOGRAFIA E CORES
+   AJUSTE SEÇÃO "COMO COMPRAR?"
 ======================================= */
 
-/* Texto geral do site em verde suave */
-html,
-body {
-  color: #2f6f71; /* verde mais claro para texto */
+/* Grid centralizado com 3 cards lado a lado */
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.8rem;
+  max-width: 1000px;
+  margin: 2rem auto 0; /* centraliza dentro da página */
 }
 
-/* Títulos em verde um pouco mais escuro,
-   usando a mesma fonte do head (Inter Tight) */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-.section-title,
-.hero-title,
-.logo-sub {
-  font-family: "Inter Tight", "Inter", system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
-  color: #184f54; /* verde mais escuro para títulos */
+/* Card do passo */
+.step {
+  background: #ffffff;
+  border-radius: 1.1rem;
+  padding: 1.6rem 1.8rem 1.8rem;
+  border: 1px solid rgba(190, 212, 211, 0.9);
+  box-shadow: 0 16px 30px rgba(120, 152, 152, 0.16);
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%; /* todos com mesma altura */
 }
 
-/* Links do menu no mesmo tom de verde do texto */
-.main-nav a {
+/* Cabeçalho: número + título na mesma linha */
+.step-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+/* Número simples */
+.step-number {
+  background: none;
+  border-radius: 0;
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin-top: 0.1rem;
+
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #19506a;
+}
+
+/* Título do passo */
+.step h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #123f43;
+  margin: 0;
+}
+
+/* Texto do passo */
+.step p {
+  font-size: 0.88rem;
   color: #2f6f71;
+  margin: 0;
 }
 
-/* Ajuste de textos que tinham outras cores específicas,
-   para unificar o tom de verde do corpo de texto */
-.section-intro,
-.hero-subtitle,
-.hero-tagline,
-.hero-notice,
-.feature-list li,
-.card p,
-.tag-list li,
-.text-block,
-.step p,
-.info-box ul,
-.info-note,
-.testimonial-list blockquote,
-.guarantee-note,
-.faq-list,
-details p,
-.footer-inner,
-.download-subtitle,
-.download-ready-text,
-.download-help-text,
-.download-status {
-  color: #2f6f71;
-}
-
-/* SOBRE A AUTORA – texto justificado, mesma cor e boa leitura */
-.about-text p {
-  line-height: 1.7;
-  font-size: 1.02rem;
-  color: #2f6f71;
-  text-align: justify;
-  white-space: pre-line; /* mantém suas quebras de linha manuais */
-}
-/* Títulos em verde mais escuro e elegante */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-.section-title,
-.hero-title,
-.logo-sub {
-  font-family: "Inter Tight", "Inter", system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
-  color: #123f43; /* verde mais escuro ajustado */
+/* Botão/CTA logo abaixo dos passos, centralizado */
+.cta-center {
+  margin-top: 2.5rem;
+  text-align: center;
 }
