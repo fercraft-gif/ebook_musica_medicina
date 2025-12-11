@@ -62,26 +62,6 @@
     .modal-close:hover {
       color: #f9fafb;
     }
-    .pix-box {
-      margin-top: 1.25rem;
-      padding: 1rem 1.25rem;
-      border-radius: 0.75rem;
-      background: rgba(15, 118, 110, 0.08);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      font-size: 0.9rem;
-    }
-    .pix-box pre {
-      white-space: pre-wrap;
-      word-break: break-all;
-      font-size: 0.8rem;
-      background: rgba(0, 0, 0, 0.35);
-      padding: 0.75rem;
-      border-radius: 0.75rem;
-      margin: 0.5rem 0 0.75rem;
-    }
-    .pix-box.hidden {
-      display: none;
-    }
     .input-row {
       display: flex;
       flex-direction: column;
@@ -441,20 +421,6 @@
           Continuar para pagamento seguro
         </button>
       </form>
-
-      <!-- Caixa Pix (se um dia voltar a usar o fluxo fixo de Pix) -->
-      <div id="pix-box" class="pix-box hidden">
-        <p>Seus dados foram registrados. Agora copie o código Pix abaixo e pague pelo app do seu banco:</p>
-
-        <pre id="pix-code-display"></pre>
-
-        <button type="button" id="copy-pix-code" class="btn btn-outline btn-small">
-          Copiar código PIX
-        </button>
-
-        <p id="copy-pix-feedback" class="hero-notice"></p>
-      </div>
-
     </div>
   </div>
 
