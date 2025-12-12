@@ -12,7 +12,7 @@
     return document.getElementById(id);
   }
 
-function getFormData() {
+ function getFormData() {
   // tenta por IDs conhecidos
   const nameEl =
     document.getElementById("name") ||
