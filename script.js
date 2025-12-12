@@ -12,15 +12,38 @@
     return document.getElementById(id);
   }
 
-  function getFormData() {
-    const nameEl = $("name") || $("buyer-name") || $("customer-name");
-    const emailEl = $("email") || $("buyer-email") || $("customer-email");
+function getFormData() {
+  // tenta por IDs conhecidos
+  const nameEl =
+    document.getElementById("name") ||
+    document.getElementById("buyer-name") ||
+    document.getElementById("customer-name");
 
-    const name = (nameEl?.value || "").trim();
-    const email = (emailEl?.value || "").trim();
+  const emailEl =
+    document.getElementById("email") ||
+    document.getElementById("buyer-email") ||
+    document.getElementById("customer-email");
 
-    return { name, email };
-  }
+  // fallback: tenta achar qualquer input de email visível
+  const emailFallback =
+    emailEl ||
+    document.querySelector('input[type="email"]') ||
+    document.querySelector('input[name="email"]') ||
+    document.querySelector('input[autocomplete="email"]');
+
+  // fallback: tenta achar qualquer input de nome visível
+  const nameFallback =
+    nameEl ||
+    document.querySelector('input[name="name"]') ||
+    document.querySelector('input[autocomplete="name"]') ||
+    // pega o primeiro input text (se existir)
+    document.querySelector('input[type="text"]');
+
+  const name = (nameFallback?.value || "").trim();
+  const email = (emailFallback?.value || "").trim();
+
+  return { name, email };
+}
 
   function ensureNameEmail({ name, email }) {
     if (!name || !email) {

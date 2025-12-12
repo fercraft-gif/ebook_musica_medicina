@@ -18,7 +18,6 @@ const EBOOK_MAIN_PATH =
 
 // Tempo de expiração do link (em segundos) – aqui 2 horas
 const SIGNED_URL_EXPIRES_IN = 60 * 60 * 2;
-
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Método não permitido' });
