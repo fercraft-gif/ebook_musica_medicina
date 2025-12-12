@@ -1,227 +1,121 @@
 // /api/mp-webhook.js
-import mercadopago from 'mercadopago';
-import { supabaseAdmin } from '../lib/supabaseAdmin.js';
+import mercadopago from "mercadopago";
+import { supabaseAdmin } from "../lib/supabaseAdmin.js";
 
-// ⚙️ Credenciais (mesmo padrão do create-checkout)
 const accessToken = process.env.MP_ACCESS_TOKEN;
 
-if (!accessToken) {
-  console.error('MP_ACCESS_TOKEN não configurado na Vercel (mp-webhook)!');
-} else {
-  mercadopago.configure({
-    access_token: accessToken,
-  });
+if (!accessToken) console.error("MP_ACCESS_TOKEN não configurado!");
+else mercadopago.configure({ access_token: accessToken });
+
+function getQueryParam(req, key) {
+  return req?.query?.[key] ?? req?.query?.[key.replace(".", "")];
 }
 
-/**
- * Webhook do Mercado Pago
- *
- * - Recebe notificações do MP
- * - Busca o pagamento pelo ID
- * - Lê o external_reference (id do pedido na ebook_order)
- * - Atualiza status / download_allowed no Supabase
- */
 export default async function handler(req, res) {
-  // Mercado Pago normalmente envia POST, mas deixamos GET em modo "OK" pra evitar erro 500
-  if (req.method !== 'POST' && req.method !== 'GET') {
-    return res.status(405).json({ error: 'Método não permitido' });
-  }
+  // MP pode dar GET de teste
+  if (req.method === "GET") return res.status(200).send("ok");
+  if (req.method !== "POST")
+    return res.status(405).json({ error: "Método não permitido" });
 
   try {
-    const { method, query, body } = req;
+    const body = req.body || {};
+    const query = req.query || {};
 
-    // Log básico de segurança (sem travar fluxo)
-    console.log('🔔 MP Webhook recebido:', {
-      method,
-      query,
-      body,
-    });
+    // Logs essenciais
+    console.log("[MP WEBHOOK] method:", req.method);
+    console.log("[MP WEBHOOK] query:", JSON.stringify(query));
+    console.log("[MP WEBHOOK] body :", JSON.stringify(body));
 
-    // 1) Extrai paymentId e "topic/type" em formatos possíveis
+    const topic = body.type || body.topic || query.type || query.topic;
+
+    // MP às vezes manda o id assim: ?data.id=123
+    const dataIdFromBody = body?.data?.id;
+    const dataIdFromQuery =
+      getQueryParam(req, "data.id") || query["data.id"] || query.id;
+
+    const dataId = dataIdFromBody || dataIdFromQuery;
+
     let paymentId = null;
-    let topic = null;
 
-    if (method === 'GET') {
-      // Formato antigo de IPN
-      paymentId = query['data.id'] || query.id || null;
-      topic = query.topic || query.type || null;
-    } else if (method === 'POST') {
-      // Formato novo de webhook
-      paymentId = body?.data?.id || body?.id || null;
-      topic = body?.type || body?.topic || body?.action || null;
+    // Caso: payment
+    if (topic === "payment" && dataId) {
+      paymentId = dataId;
     }
 
-    // Se não veio nada que pareça pagamento, só confirma 200 para não gerar retries infinitos
+    // Caso: merchant_order (muito comum em cartão)
+    if (!paymentId && topic === "merchant_order" && dataId) {
+      const mo = await mercadopago.merchant_orders.findById(dataId);
+      const payments = mo?.body?.payments || [];
+      if (payments.length) paymentId = payments[payments.length - 1].id;
+    }
+
     if (!paymentId) {
-      console.warn('Webhook sem paymentId. Ignorando com 200 OK.');
-      return res.status(200).json({ ignored: true, reason: 'no-payment-id' });
-    }
-
-    console.log('🔍 Buscando pagamento no Mercado Pago:', { paymentId, topic });
-
-    // 2) Busca o pagamento no Mercado Pago
-    let paymentResponse;
-    try {
-      // SDK v1 – payments
-      paymentResponse = await mercadopago.payment.findById(paymentId);
-    } catch (mpErr) {
-      if (mpErr?.response) {
-        console.error(
-          'Erro Mercado Pago (payment.findById): status',
-          mpErr.response.status,
-          'body',
-          JSON.stringify(mpErr.response.body, null, 2)
-        );
-      } else {
-        console.error('Erro Mercado Pago (payment.findById):', mpErr);
-      }
-
-      // Mesmo com erro, devolvemos 200 para evitar loop de notificações
+      console.log("[MP WEBHOOK] ignored: no-payment-id", { topic, dataId });
       return res.status(200).json({
-        success: false,
-        step: 'mp-payment',
-        error: 'Erro ao buscar pagamento no Mercado Pago.',
-        details: mpErr?.response?.body || mpErr?.message || String(mpErr),
+        ignored: true,
+        reason: "no-payment-id",
+        topic,
+        dataId,
       });
     }
 
-    const payment = paymentResponse?.body;
+    // Busca pagamento completo
+    const payResp = await mercadopago.payment.findById(paymentId);
+    const payment = payResp?.body;
 
     if (!payment) {
-      console.error(
-        'Resposta inesperada ao buscar pagamento:',
-        JSON.stringify(paymentResponse || {}, null, 2)
-      );
+      console.log("[MP WEBHOOK] ignored: payment-not-found", { paymentId });
       return res.status(200).json({
-        success: false,
-        step: 'mp-payment',
-        error: 'Pagamento não encontrado ou resposta vazia do Mercado Pago.',
+        ignored: true,
+        reason: "payment-not-found",
+        paymentId,
       });
     }
 
-    const externalRef = payment.external_reference;
-    const mpStatus = payment.status; // approved, pending, rejected, etc.
-    const statusDetail = payment.status_detail;
+    const status = payment.status; // approved, pending, rejected...
+    const externalRef =
+      payment.external_reference || payment?.metadata?.order_id;
 
-    console.log('✅ Pagamento encontrado:', {
+    console.log("[MP WEBHOOK] payment:", {
       paymentId,
-      externalRef,
-      mpStatus,
-      statusDetail,
+      status,
+      external_reference: externalRef,
+      payment_method_id: payment.payment_method_id,
     });
 
     if (!externalRef) {
-      // Sem external_reference não temos como casar com a tabela
-      console.error('Pagamento sem external_reference. Não dá pra vincular à ebook_order.');
+      console.error("[MP WEBHOOK] sem external_reference — não dá pra casar pedido");
       return res.status(200).json({
-        success: false,
-        step: 'no-external-ref',
-        error: 'Pagamento sem external_reference. Não foi possível vincular ao pedido.',
+        ignored: true,
+        reason: "no-external-reference",
+        paymentId,
+        status,
       });
     }
 
-    // 3) Mapeia status do MP para status interno e permissão de download
-    let appStatus = 'pending'; // nossa coluna "status" na ebook_order
-    let downloadAllowed = false;
+    // Atualiza pedido (fala o MESMO idioma do seu create-checkout.js)
+    const updateData = {
+      status: status === "approved" ? "approved" : "pending",
+      mp_status: status,
+      download_allowed: status === "approved",
+      // se você NÃO tiver essas colunas, pode remover:
+      // mp_payment_id: String(paymentId),
+    };
 
-    switch (mpStatus) {
-      case 'approved':
-        appStatus = 'approved';
-        downloadAllowed = true;
-        break;
-      case 'cancelled':
-      case 'rejected':
-      case 'refunded':
-      case 'charged_back':
-        appStatus = 'canceled';
-        downloadAllowed = false;
-        break;
-      default:
-        // pending, in_process, etc.
-        appStatus = 'pending';
-        downloadAllowed = false;
-        break;
+    const { error } = await supabaseAdmin
+      .from("ebook_order")
+      .update(updateData)
+      .eq("id", String(externalRef));
+
+    if (error) {
+      console.error("[MP WEBHOOK] Supabase update error:", error);
+      return res.status(200).json({ ok: false, supabase_error: true });
     }
 
-    // 4) Atualiza a linha correspondente na tabela ebook_order
-  const updatePayload = {
-    status: appStatus,                 // 'approved', 'pending', 'canceled'
-    download_allowed: downloadAllowed, // true/false
-    mp_status: mpStatus,               // 'approved', 'pending', etc.
-  };
-
-  // tenta por ID (external_reference)
-  let { data: updatedById, error: errById } = await supabaseAdmin
-    .from('ebook_order')
-    .update(updatePayload)
-    .eq('id', externalRef)
-    .select('id,email,status,download_allowed');
-
-  if (errById) {
-    console.error('Erro update por id:', errById);
-    return res.status(200).json({ success: false, step: 'supabase-update-id', details: errById });
-  }
-
-  // se não atualizou nenhuma linha, tenta por e-mail do pagador (fallback)
-  if (!updatedById || updatedById.length === 0) {
-    const payerEmail = payment?.payer?.email;
-
-    console.warn('⚠️ Nenhuma linha atualizada por id. Tentando por e-mail:', payerEmail);
-
-    if (!payerEmail) {
-      return res.status(200).json({
-        success: false,
-        step: 'supabase-update-fallback',
-        error: 'Sem payer.email para fallback e external_reference não casou com id.',
-      });
-    }
-
-    let { data: updatedByEmail, error: errByEmail } = await supabaseAdmin
-      .from('ebook_order')
-      .update(updatePayload)
-      .eq('email', payerEmail)
-      .select('id,email,status,download_allowed');
-
-    if (errByEmail) {
-      console.error('Erro update por email:', errByEmail);
-      return res.status(200).json({ success: false, step: 'supabase-update-email', details: errByEmail });
-    }
-
-    if (!updatedByEmail || updatedByEmail.length === 0) {
-      return res.status(200).json({
-        success: false,
-        step: 'supabase-update-none',
-        error: 'Não encontrei pedido nem por id (external_reference) nem por email (payer.email).',
-        externalRef,
-        payerEmail,
-      });
-    }
-
-    console.log('✅ Pedido atualizado por e-mail:', updatedByEmail[0]);
-  } else {
-    console.log('✅ Pedido atualizado por id:', updatedById[0]);
-  }
-
-    // 5) Responde 200 para o Mercado Pago
-    return res.status(200).json({
-      success: true,
-      step: 'done',
-      paymentId,
-      orderId: externalRef,
-      mpStatus,
-      statusDetail,
-      appStatus,
-      downloadAllowed,
-    });
+    return res.status(200).json({ ok: true });
   } catch (err) {
-    console.error('Erro inesperado em /api/mp-webhook:', err);
-
-    // NÃO retornar 500 para o MP, pra evitar retries infinitos
-    return res.status(200).json({
-      success: false,
-      step: 'unknown',
-      error: 'Erro interno no webhook.',
-      details: err?.message || String(err),
-    });
+    console.error("[MP WEBHOOK] erro geral:", err);
+    // 200 pra evitar tempestade de retry do MP
+    return res.status(200).json({ ok: false });
   }
 }

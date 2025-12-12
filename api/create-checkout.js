@@ -196,6 +196,7 @@ export default async function handler(req, res) {
       .from('ebook_order')
       .update({
         mp_external_reference: String(orderId),
+        mp_preference_id: String(prefId),   // <<< adiciona isso (crie a coluna se não existir)
         mp_raw: preference.body,
       })
       .eq('id', orderId);

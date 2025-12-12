@@ -1,184 +1,157 @@
-// ---------------------------------------------------------
-// 🔎 Detecta bloqueio de scripts do Mercado Pago (AdBlock)
-// ---------------------------------------------------------
-async function detectarBloqueioMP() {
-  const url = "https://sdk.mercadopago.com/js/v2";
+// /script.js
+(function () {
+  // ==========================
+  // Config
+  // ==========================
+  const API_CHECKOUT_URL = "/api/create-checkout";
 
-  try {
-    const resp = await fetch(url, { method: "HEAD" });
-    return !resp.ok; // se não carregar → bloqueado
-  } catch (e) {
-    return true; // erro = bloqueado
-  }
-}
-
-// ---------------------------------------------------------
-// 🔎 Exibe alerta se o navegador estiver bloqueando o checkout
-// ---------------------------------------------------------
-async function verificarBloqueioMP() {
-  const bloqueado = await detectarBloqueioMP();
-
-  if (bloqueado) {
-    alert(
-      "⚠ Atenção!\n\nSeu navegador pode estar bloqueando scripts do Mercado Pago. " +
-        "Isso pode desabilitar o botão 'Pagar'.\n\n" +
-        "Soluções rápidas:\n" +
-        "• Abra esta página em modo anônimo;\n" +
-        "• Desative AdBlock / bloqueadores;\n" +
-        "• Permita cookies e scripts de terceiros."
-    );
-  }
-}
-
-// ---------------------------------------------------------
-// 💳 Fluxo de checkout: modal + chamada para /api/create-checkout
-// ---------------------------------------------------------
-function iniciarCheckout() {
-  // Botões
-  const payPixBtn = document.getElementById("pay-pix");
-  const payPixSecondaryBtn = document.getElementById("pay-pix-secondary");
-  const payCardBtn = document.getElementById("pay-card");
-  const payCardFinalBtn = document.getElementById("pay-card-final");
-
-  // Modal
-  const modal = document.getElementById("checkout-modal");
-  const modalClose = document.getElementById("modal-close");
-  const checkoutForm = document.getElementById("checkout-form");
-
-  // Inputs
-  const buyerNameInput = document.getElementById("buyer-name");
-  const buyerEmailInput = document.getElementById("buyer-email");
-  const modalMessage = document.getElementById("modal-message");
-
-  // Botão de submit do formulário
-  const submitBtn = checkoutForm
-    ? checkoutForm.querySelector('button[type="submit"]')
-    : null;
-
-  let currentPaymentMethod = null;
-  let isSubmitting = false; // trava contra clique duplo
-
-  // Abre modal
-  function openModal(method) {
-    currentPaymentMethod = method;
-    modal.classList.remove("hidden");
-    modalMessage.textContent = "";
-    checkoutForm.reset();
-    isSubmitting = false;
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Continuar para pagamento seguro";
-    }
+  // ==========================
+  // Util
+  // ==========================
+  function $(id) {
+    return document.getElementById(id);
   }
 
-  // Fecha modal
-  function closeModal() {
-    modal.classList.add("hidden");
+  function getFormData() {
+    const nameEl = $("name") || $("buyer-name") || $("customer-name");
+    const emailEl = $("email") || $("buyer-email") || $("customer-email");
+
+    const name = (nameEl?.value || "").trim();
+    const email = (emailEl?.value || "").trim();
+
+    return { name, email };
   }
 
-  // Botões → abre modal
-  payPixBtn?.addEventListener("click", () => openModal("pix"));
-  payPixSecondaryBtn?.addEventListener("click", () => openModal("pix"));
-  payCardBtn?.addEventListener("click", () => openModal("card"));
-  payCardFinalBtn?.addEventListener("click", () => openModal("card"));
-  modalClose?.addEventListener("click", closeModal);
-
-  // Fechar clicando fora
-  modal?.addEventListener("click", (e) => {
-    if (e.target === modal) closeModal();
-  });
-
-  // ----------------------------------------------
-  // 🧠 Formulário → cria preferência no backend
-  // ----------------------------------------------
-  checkoutForm?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    if (isSubmitting) return;
-
-    const name = buyerNameInput?.value?.trim();
-    const email = buyerEmailInput?.value?.trim();
-
+  function ensureNameEmail({ name, email }) {
     if (!name || !email) {
-      modalMessage.textContent = "Preencha nome e e-mail para continuar.";
-      return;
+      alert("Por favor, preencha nome e e-mail para continuar.");
+      return false;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      alert("E-mail inválido. Confira e tente novamente.");
+      return false;
+    }
+    return true;
+  }
+
+  // ==========================
+  // AdBlock / bloqueio MP (não quebra fluxo)
+  // ==========================
+  async function detectarBloqueioMP() {
+    const url = "https://sdk.mercadopago.com/js/v2";
+    try {
+      const resp = await fetch(url, { method: "HEAD", mode: "no-cors" });
+      // no-cors pode retornar "opaque"; nesse caso consideramos "não bloqueado"
+      return false;
+    } catch (e) {
+      return true;
+    }
+  }
+
+  async function verificarBloqueioMPUmaVez() {
+    const key = "mp_block_warning_shown";
+    if (sessionStorage.getItem(key) === "1") return;
+
+    const bloqueado = await detectarBloqueioMP();
+    if (bloqueado) {
+      sessionStorage.setItem(key, "1");
+      alert(
+        "⚠ Atenção!\n\nSeu navegador pode estar bloqueando scripts do Mercado Pago.\n" +
+          "Isso pode desabilitar o checkout.\n\n" +
+          "Soluções rápidas:\n" +
+          "• Abra em aba anônima\n" +
+          "• Desative AdBlock/bloqueadores\n" +
+          "• Permita cookies/scripts de terceiros"
+      );
+    }
+  }
+
+  // ==========================
+  // Checkout
+  // ==========================
+  async function criarCheckout({ name, email, paymentMethod }) {
+    const resp = await fetch(API_CHECKOUT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, paymentMethod }),
+    });
+
+    const data = await resp.json().catch(() => ({}));
+
+    if (!resp.ok) {
+      console.error("Erro /api/create-checkout:", data);
+      throw new Error(data?.error || "Falha ao iniciar checkout.");
     }
 
-    if (!currentPaymentMethod) {
-      modalMessage.textContent = "Escolha primeiro uma forma de pagamento.";
-      return;
-    }
+    return data;
+  }
 
-    isSubmitting = true;
-    modalMessage.textContent = "Iniciando pagamento seguro...";
-
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Processando...";
+  function abrirCheckout(initPoint) {
+    // nova aba é mais confiável (evita bloqueios de iframe/modal)
+    const win = window.open(initPoint, "_blank", "noopener,noreferrer");
+    if (!win) {
+      alert("Seu navegador bloqueou a abertura do checkout. Permita pop-ups e tente novamente.");
     }
+  }
+
+  async function iniciarCheckout(paymentMethod) {
+    await verificarBloqueioMPUmaVez();
+
+    const form = getFormData();
+    if (!ensureNameEmail(form)) return;
 
     try {
-      const response = await fetch("/api/create-checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          email,
-          paymentMethod: currentPaymentMethod, // "pix" ou "card"
-        }),
+      // trava botões durante a chamada
+      setButtonsDisabled(true);
+
+      const data = await criarCheckout({
+        ...form,
+        paymentMethod,
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        console.error("Erro:", result);
-        modalMessage.textContent =
-          result.error ||
-          "Erro ao iniciar o pagamento. Tente novamente em alguns instantes.";
-        isSubmitting = false;
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = "Continuar para pagamento seguro";
-        }
+      // se já comprou, manda direto pro download
+      if (data?.alreadyPurchased && data?.redirectTo) {
+        window.location.href = data.redirectTo;
         return;
       }
 
-      // ✅ Se já comprou, o backend devolve redirectTo para ir direto ao download
-      if (result.alreadyPurchased && result.redirectTo) {
-        window.location.href = result.redirectTo;
-        return;
-      }
+      if (!data?.initPoint) throw new Error("Checkout sem initPoint. Verifique logs.");
 
-      if (!result.initPoint) {
-        modalMessage.textContent =
-          "Erro inesperado ao gerar pagamento. Tente novamente.";
-        isSubmitting = false;
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = "Continuar para pagamento seguro";
-        }
-        return;
-      }
-
-      // Redireciona para checkout do Mercado Pago
-      window.location.href = result.initPoint;
+      abrirCheckout(data.initPoint);
     } catch (err) {
       console.error(err);
-      modalMessage.textContent =
-        "Falha ao conectar. Verifique sua internet e tente novamente.";
-      isSubmitting = false;
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Continuar para pagamento seguro";
-      }
+      alert(err?.message || "Erro ao iniciar pagamento. Tente novamente.");
+    } finally {
+      setButtonsDisabled(false);
     }
-  });
-}
+  }
 
-// ---------------------------------------------------------
-// 🚀 Inicialização automática ao carregar a página
-// ---------------------------------------------------------
-document.addEventListener("DOMContentLoaded", () => {
-  verificarBloqueioMP();
-  iniciarCheckout();
-});
+  function setButtonsDisabled(disabled) {
+    const ids = ["pay-pix", "pay-pix-secondary", "pay-card", "pay-card-final"];
+    ids.forEach((id) => {
+      const el = $(id);
+      if (el) el.disabled = disabled;
+    });
+  }
+
+  // ==========================
+  // Bind
+  // ==========================
+  function bind() {
+    const payPixBtn = $("pay-pix");
+    const payPixSecondaryBtn = $("pay-pix-secondary");
+    const payCardBtn = $("pay-card");
+    const payCardFinalBtn = $("pay-card-final");
+
+    // não explode se não existir
+    payPixBtn?.addEventListener("click", () => iniciarCheckout("pix"));
+    payPixSecondaryBtn?.addEventListener("click", () => iniciarCheckout("pix"));
+    payCardBtn?.addEventListener("click", () => iniciarCheckout("card"));
+    payCardFinalBtn?.addEventListener("click", () => iniciarCheckout("card"));
+
+    console.log("script.js carregado ✅");
+  }
+
+  // init
+  document.addEventListener("DOMContentLoaded", bind);
+})();
