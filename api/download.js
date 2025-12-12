@@ -1,200 +1,151 @@
 // /api/download.js
-import mercadopago from "mercadopago";
-import { supabaseAdmin } from "../lib/supabaseAdmin.js";
+import { supabaseAdmin } from '../lib/supabaseAdmin.js';
+import { log, warn, error } from "../lib/logger.js";
 
 /**
  * /api/download
  *
- * - Busca pedido no Supabase pelo e-mail (ou orderId)
- * - Se download_allowed=true -> gera signed URL
- * - Se download_allowed=false -> tenta reconciliar com Mercado Pago (fallback do webhook)
- *    - procura pagamento aprovado por external_reference=orderId
- *    - se achar approved, atualiza Supabase e libera na hora
+ * - Confere no Supabase se há um pedido para o e-mail informado
+ * - Verifica se download_allowed = true (pagamento aprovado / liberado)
+ * - Se estiver liberado, gera URL assinada do PDF no Storage
+ * - Retorna as infos em JSON para o front abrir automaticamente
  */
 
 // ⚠ CONFIRA estes valores no Supabase Storage
-const EBOOK_BUCKET = process.env.EBOOK_BUCKET || "ebook_musica_medicina";
-const EBOOK_MAIN_PATH = process.env.EBOOK_MAIN_PATH || "musica-e-ansiedade.pdf";
+const EBOOK_BUCKET = process.env.EBOOK_BUCKET || 'ebook_musica_medicina';
+const EBOOK_MAIN_PATH =
+  process.env.EBOOK_MAIN_PATH || 'musica-e-ansiedade.pdf';
 
 // Tempo de expiração do link (em segundos) – aqui 2 horas
 const SIGNED_URL_EXPIRES_IN = 60 * 60 * 2;
 
-// MP
-const accessToken = process.env.MP_ACCESS_TOKEN;
-if (!accessToken) {
-  console.error("MP_ACCESS_TOKEN não configurado na Vercel!");
-} else {
-  mercadopago.configure({ access_token: accessToken });
-}
-
-async function createEbookSignedUrl() {
-  const { data: ebookSigned, error: ebookSignedError } = await supabaseAdmin.storage
-    .from(EBOOK_BUCKET)
-    .createSignedUrl(EBOOK_MAIN_PATH, SIGNED_URL_EXPIRES_IN);
-
-  if (ebookSignedError) {
-    throw new Error(ebookSignedError.message || "Erro ao criar signed URL.");
-  }
-
-  const ebookUrl = ebookSigned?.signedUrl;
-  if (!ebookUrl) throw new Error("Signed URL vazia.");
-
-  return ebookUrl;
-}
-
-/**
- * Reconciliador:
- * tenta achar pagamento aprovado no Mercado Pago usando external_reference = orderId
- */
-async function reconcileWithMercadoPago(orderId) {
-  if (!accessToken) return { reconciled: false, reason: "no-mp-token" };
-
-  try {
-    // Busca pagamentos pela referência externa (Mercado Pago permite search)
-    const searchResp = await mercadopago.payment.search({
-      qs: {
-        external_reference: String(orderId),
-        sort: "date_created",
-        criteria: "desc",
-        limit: 10,
-      },
-    });
-
-    const results = searchResp?.body?.results || [];
-    if (!results.length) {
-      return { reconciled: false, reason: "no-payments-found" };
-    }
-
-    // pega o mais recente
-    const p = results[0];
-    const status = p.status;
-    const paymentId = p.id;
-
-    return {
-      reconciled: status === "approved",
-      status,
-      paymentId: paymentId ? String(paymentId) : null,
-    };
-  } catch (e) {
-    console.error("Erro ao reconciliar com MP:", e);
-    return { reconciled: false, reason: "mp-search-error" };
-  }
-}
-
 export default async function handler(req, res) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "Método não permitido" });
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Método não permitido' });
   }
 
   try {
     const { email, orderId } = req.query || {};
 
-    if (!email && !orderId) {
+    if (!email) {
       return res.status(400).json({
-        step: "validation",
-        error: "Informe e-mail (ou orderId) para localizar seu pedido.",
+        step: 'validation',
+        error: 'E-mail é obrigatório para localizar seu pedido.',
       });
     }
 
-    const emailClean = email ? String(email).trim() : null;
-    const orderIdClean = orderId ? String(orderId).trim() : null;
+    const emailClean = String(email).trim();
 
-    console.log("🔍 [/api/download] Buscando pedido para:", {
+    console.log('🔍 [/api/download] Buscando pedido para:', {
       email: emailClean,
-      orderId: orderIdClean,
+      orderId: orderId || null,
     });
 
-    // 1) Busca o pedido do usuário
+    // 1) Busca o pedido do usuário (ou um específico, se orderId vier)
     let query = supabaseAdmin
-      .from("ebook_order")
-      .select("id, status, download_allowed, mp_status, email");
+      .from('ebook_order')
+      .select('id, status, download_allowed, mp_status, email')
+      // ilike deixa a busca de e-mail case-insensitive (Nanda / nanda)
+      .ilike('email', emailClean);
 
-    if (orderIdClean) {
-      query = query.eq("id", orderIdClean);
-    } else {
-      query = query.ilike("email", emailClean);
+    if (orderId) {
+      query = query.eq('id', String(orderId).trim());
     }
 
-    query = query.order("id", { ascending: false }).limit(1);
+    // como não temos created_at, ordena pelo id para pegar o mais "recente"
+    query = query.order('id', { ascending: false }).limit(1);
 
     const { data, error } = await query;
 
     if (error) {
-      console.error("❌ Erro Supabase em /api/download:", JSON.stringify(error, null, 2));
+      console.error(
+        '❌ Erro Supabase ao buscar pedido em /api/download:',
+        JSON.stringify(error, null, 2)
+      );
+
       return res.status(500).json({
-        step: "supabase-select",
-        error: "Erro ao buscar pedido no Supabase.",
+        step: 'supabase-select',
+        error: 'Erro ao buscar pedido no Supabase.',
         details: error.message || error,
       });
     }
 
     if (!data || data.length === 0) {
+      console.warn('⚠ Nenhum pedido encontrado para este e-mail.', {
+        email: emailClean,
+      });
+
       return res.status(404).json({
         found: false,
         allowed: false,
-        error: "Nenhum pedido encontrado.",
+        error: 'Nenhum pedido encontrado para este e-mail.',
       });
     }
 
-    let order = data[0];
-    console.log("📦 Pedido encontrado:", order);
+    const order = data[0];
 
-    // 2) Se não liberou, tenta reconciliar com MP (fallback)
+    console.log('📦 Pedido encontrado em /api/download:', order);
+
+    // 2) Se ainda não liberou download, apenas informa status
     if (!order.download_allowed) {
-      console.log("⏳ Ainda não liberado. Tentando reconciliar com MP…", { id: order.id });
+      console.log('⏳ Download ainda não liberado para este pedido:', {
+        id: order.id,
+        status: order.status,
+        mp_status: order.mp_status,
+      });
 
-      const rec = await reconcileWithMercadoPago(order.id);
-
-      console.log("🔁 Resultado reconciliação:", rec);
-
-      if (rec.reconciled) {
-        // Atualiza Supabase (idempotente)
-        const { error: updErr } = await supabaseAdmin
-          .from("ebook_order")
-          .update({
-            status: "approved",
-            mp_status: "approved",
-            download_allowed: true,
-            // se você não tiver essa coluna, remova:
-            // mp_payment_id: rec.paymentId,
-          })
-          .eq("id", String(order.id));
-
-        if (updErr) {
-          console.error("❌ Erro ao atualizar pedido após reconciliação:", updErr);
-          // Mesmo assim, não libera — precisa consistência
-          return res.status(200).json({
-            found: true,
-            allowed: false,
-            status: order.status,
-            mpStatus: order.mp_status,
-            orderId: order.id,
-            message:
-              "Seu pagamento parece aprovado, mas houve erro ao atualizar o sistema. Tente novamente em instantes.",
-          });
-        }
-
-        // Recarrega estado local
-        order = { ...order, status: "approved", mp_status: "approved", download_allowed: true };
-        console.log("✅ Pedido reconciliado e liberado:", order.id);
-      } else {
-        // continua pendente
-        return res.status(200).json({
-          found: true,
-          allowed: false,
-          status: order.status,
-          mpStatus: order.mp_status,
-          orderId: order.id,
-          message:
-            "Seu pagamento ainda não foi confirmado. Se você já pagou, aguarde alguns minutos e recarregue esta página.",
-          debug: rec.reason ? rec.reason : undefined, // pode remover depois
-        });
-      }
+      return res.status(200).json({
+        found: true,
+        allowed: false,
+        status: order.status,
+        mpStatus: order.mp_status,
+        orderId: order.id,
+        message:
+          'Seu pagamento ainda não foi confirmado. Assim que for aprovado, o download será liberado automaticamente.',
+      });
     }
 
-    // 3) Agora está liberado: gera signed URL
-    const ebookUrl = await createEbookSignedUrl();
+    // 3) Gera URL assinada do PDF principal
+    console.log('🔐 Gerando signed URL para o e-book:', {
+      bucket: EBOOK_BUCKET,
+      path: EBOOK_MAIN_PATH,
+    });
 
+    const { data: ebookSigned, error: ebookSignedError } =
+      await supabaseAdmin.storage
+        .from(EBOOK_BUCKET)
+        .createSignedUrl(EBOOK_MAIN_PATH, SIGNED_URL_EXPIRES_IN);
+
+    if (ebookSignedError) {
+      console.error(
+        '❌ Erro ao criar signed URL do e-book principal:',
+        JSON.stringify(ebookSignedError, null, 2)
+      );
+
+      return res.status(500).json({
+        step: 'signed-url-ebook',
+        error: 'Erro ao gerar link de download do e-book.',
+        details: ebookSignedError.message || ebookSignedError,
+      });
+    }
+
+    const ebookUrl = ebookSigned?.signedUrl;
+
+    if (!ebookUrl) {
+      console.error(
+        '❌ Signed URL do e-book veio vazio em /api/download:',
+        JSON.stringify(ebookSigned, null, 2)
+      );
+
+      return res.status(500).json({
+        step: 'signed-url-empty',
+        error: 'Não foi possível gerar o link de download do e-book.',
+      });
+    }
+
+    console.log('✅ Signed URL gerada com sucesso.');
+
+    // 4) Retorna dados para o front
     return res.status(200).json({
       found: true,
       allowed: true,
@@ -205,10 +156,11 @@ export default async function handler(req, res) {
       expiresInSeconds: SIGNED_URL_EXPIRES_IN,
     });
   } catch (err) {
-    console.error("🔥 Erro inesperado em /api/download:", err);
+    console.error('🔥 Erro inesperado em /api/download:', err);
+
     return res.status(500).json({
-      step: "unknown",
-      error: "Erro interno ao gerar link de download.",
+      step: 'unknown',
+      error: 'Erro interno ao gerar link de download.',
       details: err?.message || String(err),
     });
   }

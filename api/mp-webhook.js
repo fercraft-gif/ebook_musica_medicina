@@ -1,10 +1,11 @@
 // /api/mp-webhook.js
 import mercadopago from "mercadopago";
 import { supabaseAdmin } from "../lib/supabaseAdmin.js";
+import { log, warn, error } from "../lib/logger.js";
 
 const accessToken = process.env.MP_ACCESS_TOKEN;
 
-if (!accessToken) console.error("MP_ACCESS_TOKEN não configurado!");
+if (!accessToken) error("MP_ACCESS_TOKEN não configurado!");
 else mercadopago.configure({ access_token: accessToken });
 
 function getQueryParam(req, key) {
@@ -21,10 +22,13 @@ export default async function handler(req, res) {
     const body = req.body || {};
     const query = req.query || {};
 
-    // Logs essenciais
-    console.log("[MP WEBHOOK] method:", req.method);
-    console.log("[MP WEBHOOK] query:", JSON.stringify(query));
-    console.log("[MP WEBHOOK] body :", JSON.stringify(body));
+   // Logs essenciais (sem vazar payload)
+   log("[MP WEBHOOK] method:", req.method);
+   log("[MP WEBHOOK] event:", {
+     topic: body?.type || body?.topic || query?.type || query?.topic || null,
+     hasDataId: !!(body?.data?.id || query?.["data.id"] || query?.id),
+});
+
 
     const topic = body.type || body.topic || query.type || query.topic;
 
@@ -50,7 +54,7 @@ export default async function handler(req, res) {
     }
 
     if (!paymentId) {
-      console.log("[MP WEBHOOK] ignored: no-payment-id", { topic, dataId });
+      warn("[MP WEBHOOK] ignored: no-payment-id", { topic, dataId });
       return res.status(200).json({
         ignored: true,
         reason: "no-payment-id",
@@ -108,13 +112,13 @@ export default async function handler(req, res) {
       .eq("id", String(externalRef));
 
     if (error) {
-      console.error("[MP WEBHOOK] Supabase update error:", error);
+      error("[MP WEBHOOK] Supabase update error:", error);
       return res.status(200).json({ ok: false, supabase_error: true });
     }
 
     return res.status(200).json({ ok: true });
   } catch (err) {
-    console.error("[MP WEBHOOK] erro geral:", err);
+    error("[MP WEBHOOK] erro geral:", err);
     // 200 pra evitar tempestade de retry do MP
     return res.status(200).json({ ok: false });
   }
