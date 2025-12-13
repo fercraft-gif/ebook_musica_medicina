@@ -114,58 +114,51 @@ function ensureNameEmail({ name, email }) {
   }
 
 function abrirCheckout(initPoint, popupRef) {
-  // Se a aba já foi aberta no clique, só redireciona ela (não é bloqueado)
+  // Se abriu aba no clique, redireciona ela
   if (popupRef && !popupRef.closed) {
     try {
-      popupRef.location.href = initPoint;
+      popupRef.location.replace(initPoint);
       return;
     } catch (e) {
-      // se der erro por qualquer motivo, cai no fallback abaixo
+      // cai no fallback
     }
   }
 
-  // Fallback 100% confiável: abre na mesma aba (não depende de pop-up)
+  // Fallback: mesma aba (não tem bloqueio)
   window.location.href = initPoint;
 }
 
- async function iniciarCheckout(paymentMethod) {
+async function iniciarCheckout(paymentMethod) {
   await verificarBloqueioMPUmaVez();
 
   const form = getFormData();
   if (!ensureNameEmail(form)) return;
 
-  // ✅ ABRE O POPUP IMEDIATAMENTE NO CLIQUE (antes de qualquer await)
-  // Isso evita bloqueio do navegador.
-  const popupRef = window.open("about:blank", "_blank", "noopener,noreferrer");
+  // ✅ Abre no clique (placeholder)
+  const popupRef = window.open("", "_blank"); // <-- sem noopener/noreferrer aqui
 
-  // Se o navegador bloqueou mesmo assim, a gente segue e abre na mesma aba no final.
-  if (popupRef) {
+  // Se abriu, mostra texto pra não ficar branco
+  if (popupRef && !popupRef.closed) {
     try {
       popupRef.document.title = "Abrindo checkout…";
+      popupRef.document.body.innerHTML =
+        "<p style='font-family:Inter,Arial;padding:16px'>Abrindo checkout do Mercado Pago…</p>";
     } catch {}
   }
 
   try {
     setButtonsDisabled(true);
 
-    const data = await criarCheckout({
-      ...form,
-      paymentMethod,
-    });
+    const data = await criarCheckout({ ...form, paymentMethod });
 
-    // Se já comprou, vai pro download (como estava)
-    if (data?.alreadyPurchased && data?.redirectTo) {
-      if (popupRef && !popupRef.closed) popupRef.close();
-      window.location.href = data.redirectTo;
-      return;
+    if (!data?.initPoint) {
+      throw new Error("API não retornou initPoint. Verifique /api/create-checkout.");
     }
 
-    if (!data?.initPoint) throw new Error("Checkout sem initPoint. Verifique logs.");
-
-    // ✅ Redireciona o popup (se existir) OU abre na mesma aba (fallback)
+    // ✅ redireciona a aba aberta OU usa fallback na mesma aba
     abrirCheckout(data.initPoint, popupRef);
   } catch (err) {
-    // Se deu erro, fecha a aba vazia (se abriu)
+    // fecha a aba vazia se der ruim
     if (popupRef && !popupRef.closed) {
       try { popupRef.close(); } catch {}
     }
@@ -175,15 +168,6 @@ function abrirCheckout(initPoint, popupRef) {
     setButtonsDisabled(false);
   }
 }
-
-  function setButtonsDisabled(disabled) {
-    const ids = ["pay-pix", "pay-pix-secondary", "pay-card", "pay-card-final"];
-    ids.forEach((id) => {
-      const el = $(id);
-      if (el) el.disabled = disabled;
-    });
-  }
-
   // ==========================
   // Bind
   // ==========================
