@@ -151,147 +151,157 @@
     </footer>
 
     <script>
-      // Atualiza ano no rodapé
-      document.getElementById("year").textContent =
-        new Date().getFullYear();
+  // Atualiza ano no rodapé
+  document.getElementById("year").textContent = new Date().getFullYear();
 
-      const titleEl = document.getElementById("download-title");
-      const msgEl = document.getElementById("download-message");
-      const statusEl = document.getElementById("download-status");
-      const emailEl = document.getElementById("buyer-email-display");
-      const retryBtn = document.getElementById("retry-button");
+  const titleEl = document.getElementById("download-title");
+  const msgEl = document.getElementById("download-message");
+  const statusEl = document.getElementById("download-status");
+  const emailEl = document.getElementById("buyer-email-display");
+  const retryBtn = document.getElementById("retry-button");
 
-      function setStatus(message, mode) {
-        statusEl.textContent = message || "";
-        statusEl.classList.remove("status-ok", "status-warn", "status-error");
+  function setStatus(message, mode) {
+    statusEl.textContent = message || "";
+    statusEl.classList.remove("status-ok", "status-warn", "status-error");
 
-        if (!message) return;
+    if (!message) return;
 
-        if (mode === "ok") statusEl.classList.add("status-ok");
-        else if (mode === "error") statusEl.classList.add("status-error");
-        else statusEl.classList.add("status-warn");
-      }
+    if (mode === "ok") statusEl.classList.add("status-ok");
+    else if (mode === "error") statusEl.classList.add("status-error");
+    else statusEl.classList.add("status-warn");
+  }
 
-      function getBuyerEmail() {
-        // 1) tenta pegar da URL ?email=
-        try {
-          const url = new URL(window.location.href);
-          const fromQuery = url.searchParams.get("email");
-          if (fromQuery) return fromQuery.trim();
-        } catch {}
+  function getBuyerEmail() {
+    // 1) tenta pegar da URL ?email=
+    try {
+      const url = new URL(window.location.href);
+      const fromQuery = url.searchParams.get("email");
+      if (fromQuery) return fromQuery.trim();
+    } catch {}
 
-        // 2) tenta pegar do localStorage salvo no checkout
-        try {
-          const stored = localStorage.getItem("buyer_email");
-          if (stored) return stored.trim();
-        } catch {}
+    // 2) tenta pegar do localStorage salvo no checkout
+    try {
+      const stored = localStorage.getItem("buyer_email");
+      if (stored) return stored.trim();
+    } catch {}
 
-        return null;
-      }
+    return null;
+  }
 
-      async function iniciarDownload() {
-        const email = getBuyerEmail();
+  function getOrderId() {
+    // 1) tenta pegar da URL ?orderId=
+    try {
+      const url = new URL(window.location.href);
+      const fromQuery = url.searchParams.get("orderId");
+      if (fromQuery) return fromQuery.trim();
+    } catch {}
 
-        if (!email) {
-          msgEl.textContent =
-            "Não consegui identificar o e-mail da compra. Mas calma, a gente resolve.";
-          setStatus(
-            "Se você já pagou, me envie um e-mail em mt.fernandazaguini@gmail.com com o comprovante para liberar manualmente.",
-            "error"
-          );
-          emailEl.textContent = "";
-          return;
+    return null;
+  }
+
+  async function iniciarDownload() {
+    const email = getBuyerEmail();
+    const orderId = getOrderId();
+
+    // ✅ Agora o download exige email + orderId
+    if (!email || !orderId) {
+      msgEl.textContent =
+        "Este link precisa vir do retorno do Mercado Pago para liberar o download com segurança.";
+      setStatus(
+        "Link incompleto. Volte ao checkout e clique em “Retornar ao site” após o pagamento.",
+        "error"
+      );
+      emailEl.textContent = email ? email : "";
+      return;
+    }
+
+    emailEl.textContent = email;
+    setStatus("Procurando seu pedido no sistema…", "warn");
+
+    try {
+      const resp = await fetch(
+        window.location.origin +
+          "/api/download?email=" +
+          encodeURIComponent(email) +
+          "&orderId=" +
+          encodeURIComponent(orderId),
+        {
+          method: "GET",
+          cache: "no-store",
         }
+      );
 
-        emailEl.textContent = email;
-        setStatus("Procurando seu pedido no sistema…", "warn");
-
-        try {
-          const resp = await fetch(
-            window.location.origin +
-              "/api/download?email=" +
-              encodeURIComponent(email),
-            {
-              method: "GET",
-              cache: "no-store",
-            }
-          );
-
-          let data;
-          try {
-            data = await resp.json();
-          } catch {
-            setStatus(
-              "Não foi possível interpretar a resposta do servidor. Tente recarregar a página.",
-              "error"
-            );
-            return;
-          }
-
-          if (!resp.ok) {
-            setStatus(
-              "Erro ao verificar seu pedido. Tente recarregar a página em alguns instantes.",
-              "error"
-            );
-            console.error("Erro /api/download:", data);
-            return;
-          }
-
-          if (!data.found) {
-            setStatus(
-              "Não encontrei nenhum pedido para este e-mail. Verifique se digitou corretamente na hora da compra.",
-              "error"
-            );
-            msgEl.textContent =
-              "Se você tiver certeza de que pagou, por favor me chame por e-mail com o comprovante.";
-            return;
-          }
-
-          // Pagamento ainda não liberado
-          if (!data.allowed || !data.ebookUrl) {
-            setStatus(
-              "Seu pagamento ainda está em análise ou não foi aprovado (status: " +
-                (data.mpStatus || data.status || "pendente") +
-                ").",
-              "warn"
-            );
-            msgEl.textContent =
-              "Assim que o pagamento for confirmado pelo sistema, você poderá voltar a esta página para baixar o e-book.";
-            return;
-          }
-
-          // Tudo certo — download liberado
-          setStatus(
-            "Pagamento confirmado! Vamos abrir o e-book automaticamente.",
-            "ok"
-          );
-          titleEl.textContent =
-            "Obrigada por confiar no meu trabalho. Seu e-book está liberado!";
-          msgEl.textContent =
-            "O PDF deve abrir em instantes. Se não abrir, use o botão abaixo para abrir novamente.";
-
-          const ebookUrl = data.ebookUrl;
-
-          // Botão para reabrir caso o navegador bloqueie o redirect
-          retryBtn.classList.remove("hidden");
-          retryBtn.onclick = () => {
-            window.open(ebookUrl, "_blank");
-          };
-
-          // Redireciona automaticamente para o PDF (pequeno delay para a pessoa ler o “Obrigada”)
-          setTimeout(() => {
-            window.location.href = ebookUrl;
-          }, 1200);
-        } catch (err) {
-          console.error("Erro inesperado ao chamar /api/download:", err);
-          setStatus(
-            "Ocorreu um erro inesperado ao tentar liberar seu download. Tente recarregar a página em alguns minutos.",
-            "error"
-          );
-        }
+      let data;
+      try {
+        data = await resp.json();
+      } catch {
+        setStatus(
+          "Não foi possível interpretar a resposta do servidor. Tente recarregar a página.",
+          "error"
+        );
+        return;
       }
 
-      document.addEventListener("DOMContentLoaded", iniciarDownload);
-    </script>
+      if (!resp.ok) {
+        setStatus(
+          "Erro ao verificar seu pedido. Tente recarregar a página em alguns instantes.",
+          "error"
+        );
+        console.error("Erro /api/download:", data);
+        return;
+      }
+
+      if (!data.found) {
+        setStatus(
+          "Não encontrei nenhum pedido para este link. Confira se você voltou pelo Mercado Pago.",
+          "error"
+        );
+        msgEl.textContent =
+          "Se você tiver certeza de que pagou, me chame por e-mail com o comprovante.";
+        return;
+      }
+
+      // Pagamento ainda não liberado
+      if (!data.allowed || !data.ebookUrl) {
+        setStatus(
+          "Seu pagamento ainda está em análise ou não foi aprovado (status: " +
+            (data.mpStatus || data.status || "pendente") +
+            ").",
+          "warn"
+        );
+        msgEl.textContent =
+          "Assim que o pagamento for confirmado, você poderá voltar a esta página para baixar o e-book.";
+        return;
+      }
+
+      // Tudo certo — download liberado
+      setStatus("Pagamento confirmado! Vamos abrir o e-book automaticamente.", "ok");
+      titleEl.textContent = "Obrigada por confiar no meu trabalho. Seu e-book está liberado!";
+      msgEl.textContent =
+        "O PDF deve abrir em instantes. Se não abrir, use o botão abaixo para abrir novamente.";
+
+      const ebookUrl = data.ebookUrl;
+
+      // Botão para reabrir caso o navegador bloqueie o redirect
+      retryBtn.classList.remove("hidden");
+      retryBtn.onclick = () => {
+        window.open(ebookUrl, "_blank");
+      };
+
+      // Redireciona automaticamente para o PDF (pequeno delay para a pessoa ler o “Obrigada”)
+      setTimeout(() => {
+        window.location.href = ebookUrl;
+      }, 1200);
+    } catch (err) {
+      console.error("Erro inesperado ao chamar /api/download:", err);
+      setStatus(
+        "Ocorreu um erro inesperado ao tentar liberar seu download. Tente recarregar a página em alguns minutos.",
+        "error"
+      );
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", iniciarDownload);
+</script>
   </body>
 </html>

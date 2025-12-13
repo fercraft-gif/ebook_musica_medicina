@@ -1,6 +1,6 @@
 // /api/download.js
 import { supabaseAdmin } from '../lib/supabaseAdmin.js';
-import { log, warn, error } from "../lib/logger.js";
+import { log, warn, error as logError } from '../lib/logger.js';
 
 /**
  * /api/download
@@ -13,11 +13,11 @@ import { log, warn, error } from "../lib/logger.js";
 
 // ⚠ CONFIRA estes valores no Supabase Storage
 const EBOOK_BUCKET = process.env.EBOOK_BUCKET || 'ebook_musica_medicina';
-const EBOOK_MAIN_PATH =
-  process.env.EBOOK_MAIN_PATH || 'musica-e-ansiedade.pdf';
+const EBOOK_MAIN_PATH = process.env.EBOOK_MAIN_PATH || 'musica-e-ansiedade.pdf';
 
 // Tempo de expiração do link (em segundos) – aqui 2 horas
 const SIGNED_URL_EXPIRES_IN = 60 * 60 * 2;
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Método não permitido' });
@@ -26,38 +26,32 @@ export default async function handler(req, res) {
   try {
     const { email, orderId } = req.query || {};
 
-    if (!email) {
+    // ✅ agora é realmente obrigatório
+    if (!email || !orderId) {
       return res.status(400).json({
         step: 'validation',
-        error: 'E-mail é obrigatório para localizar seu pedido.',
+        error: 'E-mail e orderId são obrigatórios para liberar o download.',
       });
     }
 
     const emailClean = String(email).trim();
+    const orderIdClean = String(orderId).trim();
 
-    console.log('🔍 [/api/download] Buscando pedido para:', {
+    log('🔍 [/api/download] Buscando pedido para:', {
       email: emailClean,
-      orderId: orderId || null,
+      orderId: orderIdClean,
     });
 
-    // 1) Busca o pedido do usuário (ou um específico, se orderId vier)
-    let query = supabaseAdmin
+    // ✅ busca direta: id + email (sem fallback, sem order)
+    const { data, error } = await supabaseAdmin
       .from('ebook_order')
       .select('id, status, download_allowed, mp_status, email')
-      // ilike deixa a busca de e-mail case-insensitive (Nanda / nanda)
-      .ilike('email', emailClean);
-
-    if (orderId) {
-      query = query.eq('id', String(orderId).trim());
-    }
-
-    // como não temos created_at, ordena pelo id para pegar o mais "recente"
-    query = query.order('id', { ascending: false }).limit(1);
-
-    const { data, error } = await query;
+      .eq('id', orderIdClean)
+      .ilike('email', emailClean)
+      .limit(1);
 
     if (error) {
-      console.error(
+      logError(
         '❌ Erro Supabase ao buscar pedido em /api/download:',
         JSON.stringify(error, null, 2)
       );
@@ -70,8 +64,9 @@ export default async function handler(req, res) {
     }
 
     if (!data || data.length === 0) {
-      console.warn('⚠ Nenhum pedido encontrado para este e-mail.', {
+      warn('⚠ Nenhum pedido encontrado para este e-mail + orderId.', {
         email: emailClean,
+        orderId: orderIdClean,
       });
 
       return res.status(404).json({
@@ -83,11 +78,16 @@ export default async function handler(req, res) {
 
     const order = data[0];
 
-    console.log('📦 Pedido encontrado em /api/download:', order);
+    log('📦 Pedido encontrado em /api/download:', {
+      id: order.id,
+      status: order.status,
+      download_allowed: order.download_allowed,
+      mp_status: order.mp_status,
+    });
 
     // 2) Se ainda não liberou download, apenas informa status
     if (!order.download_allowed) {
-      console.log('⏳ Download ainda não liberado para este pedido:', {
+      log('⏳ Download ainda não liberado para este pedido:', {
         id: order.id,
         status: order.status,
         mp_status: order.mp_status,
@@ -105,7 +105,7 @@ export default async function handler(req, res) {
     }
 
     // 3) Gera URL assinada do PDF principal
-    console.log('🔐 Gerando signed URL para o e-book:', {
+    log('🔐 Gerando signed URL para o e-book:', {
       bucket: EBOOK_BUCKET,
       path: EBOOK_MAIN_PATH,
     });
@@ -116,7 +116,7 @@ export default async function handler(req, res) {
         .createSignedUrl(EBOOK_MAIN_PATH, SIGNED_URL_EXPIRES_IN);
 
     if (ebookSignedError) {
-      console.error(
+      logError(
         '❌ Erro ao criar signed URL do e-book principal:',
         JSON.stringify(ebookSignedError, null, 2)
       );
@@ -131,7 +131,7 @@ export default async function handler(req, res) {
     const ebookUrl = ebookSigned?.signedUrl;
 
     if (!ebookUrl) {
-      console.error(
+      logError(
         '❌ Signed URL do e-book veio vazio em /api/download:',
         JSON.stringify(ebookSigned, null, 2)
       );
@@ -142,7 +142,7 @@ export default async function handler(req, res) {
       });
     }
 
-    console.log('✅ Signed URL gerada com sucesso.');
+    log('✅ Signed URL gerada com sucesso.');
 
     // 4) Retorna dados para o front
     return res.status(200).json({
@@ -155,7 +155,7 @@ export default async function handler(req, res) {
       expiresInSeconds: SIGNED_URL_EXPIRES_IN,
     });
   } catch (err) {
-    console.error('🔥 Erro inesperado em /api/download:', err);
+    logError('🔥 Erro inesperado em /api/download:', err);
 
     return res.status(500).json({
       step: 'unknown',

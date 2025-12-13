@@ -30,10 +30,9 @@ export default async function handler(req, res) {
     const method = paymentMethod === 'pix' ? 'pix' : 'card';
     const isPix = method === 'pix';
 
-    // 🔗 URL base da página de download
+    // 🔗 URL base da página de download (NUNCA liberar só com email)
     const baseDownloadUrl = 'https://octopusaxisebook.com/download.html';
-    const downloadUrlWithEmail =
-      baseDownloadUrl + '?email=' + encodeURIComponent(email);
+    const homeUrl = 'https://octopusaxisebook.com';
 
     // ---------------------------------------------------------
     // 0) Anti-duplicação por e-mail
@@ -45,6 +44,7 @@ export default async function handler(req, res) {
       .select('id')
       .eq('email', email)
       .eq('download_allowed', true)
+      .order('id', { ascending: false })
       .limit(1);
 
     if (alreadyErr) {
@@ -56,9 +56,16 @@ export default async function handler(req, res) {
     }
 
     if (alreadyRows && alreadyRows.length > 0) {
+      const paidOrderId = alreadyRows[0].id;
+
       return res.status(200).json({
         alreadyPurchased: true,
-        redirectTo: downloadUrlWithEmail,
+        redirectTo:
+          baseDownloadUrl +
+          '?email=' +
+          encodeURIComponent(email) +
+          '&orderId=' +
+          encodeURIComponent(String(paidOrderId)),
       });
     }
 
@@ -69,6 +76,7 @@ export default async function handler(req, res) {
       .eq('email', email)
       .eq('download_allowed', false)
       .eq('status', 'pending')
+      .order('id', { ascending: false })
       .limit(1);
 
     if (pendingErr) {
@@ -113,6 +121,14 @@ export default async function handler(req, res) {
       orderId = order.id;
     }
 
+    // ✅ Download URL SEMPRE com orderId (nunca só email)
+    const downloadUrl =
+      baseDownloadUrl +
+      '?email=' +
+      encodeURIComponent(email) +
+      '&orderId=' +
+      encodeURIComponent(String(orderId));
+
     // ---------------------------------------------------------
     // 2) MONTA PREFERENCE DO MERCADO PAGO
     // ---------------------------------------------------------
@@ -130,9 +146,10 @@ export default async function handler(req, res) {
       external_reference: String(orderId), // casa com a coluna id da tabela
       auto_return: 'approved',
       back_urls: {
-        success: downloadUrlWithEmail,
-        pending: downloadUrlWithEmail,
-        failure: downloadUrlWithEmail,
+        success: downloadUrl,
+        pending: downloadUrl,
+        // não manda para download em failure
+        failure: homeUrl + '?pay=failure',
       },
       items: [
         {
@@ -196,7 +213,7 @@ export default async function handler(req, res) {
       .from('ebook_order')
       .update({
         mp_external_reference: String(orderId),
-        mp_preference_id: String(prefId),   // <<< adiciona isso (crie a coluna se não existir)
+        mp_preference_id: String(prefId), // mantenha só se a coluna existir
         mp_raw: preference.body,
       })
       .eq('id', orderId);
