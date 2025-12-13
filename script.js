@@ -12,7 +12,7 @@
     return document.getElementById(id);
   }
 
- function getFormData() {
+function getFormData() {
   // tenta por IDs conhecidos
   const nameEl =
     document.getElementById("name") ||
@@ -36,26 +36,30 @@
     nameEl ||
     document.querySelector('input[name="name"]') ||
     document.querySelector('input[autocomplete="name"]') ||
-    // pega o primeiro input text (se existir)
     document.querySelector('input[type="text"]');
 
-  const name = (nameFallback?.value || "").trim();
-  const email = (emailFallback?.value || "").trim();
+  let name = (nameFallback?.value || "").trim();
+  let email = (emailFallback?.value || "").trim();
+
+  // fallback: se a página não tem inputs visíveis, pergunta via prompt
+  if (!name) name = (prompt("Digite seu nome para continuar:") || "").trim();
+  if (!email)
+    email = (prompt("Digite seu e-mail para receber o download:") || "").trim();
 
   return { name, email };
 }
 
-  function ensureNameEmail({ name, email }) {
-    if (!name || !email) {
-      alert("Por favor, preencha nome e e-mail para continuar.");
-      return false;
-    }
-    if (!/^\S+@\S+\.\S+$/.test(email)) {
-      alert("E-mail inválido. Confira e tente novamente.");
-      return false;
-    }
-    return true;
+function ensureNameEmail({ name, email }) {
+  if (!name || !email) {
+    alert("Por favor, preencha nome e e-mail para continuar.");
+    return false;
   }
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    alert("E-mail inválido. Confira e tente novamente.");
+    return false;
+  }
+  return true;
+}
 
   // ==========================
   // AdBlock / bloqueio MP (não quebra fluxo)
