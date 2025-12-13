@@ -113,45 +113,60 @@ function ensureNameEmail({ name, email }) {
     return data;
   }
 
-  function abrirCheckout(initPoint) {
-    // nova aba é mais confiável (evita bloqueios de iframe/modal)
-    const win = window.open(initPoint, "_blank", "noopener,noreferrer");
-    if (!win) {
-      alert("Seu navegador bloqueou a abertura do checkout. Permita pop-ups e tente novamente.");
-    }
+function abrirCheckout(win, initPoint) {
+  try {
+    win.location.href = initPoint;
+  } catch (e) {
+    // fallback (raríssimo)
+    window.location.href = initPoint;
+  }
+}
+
+ async function iniciarCheckout(paymentMethod) {
+  // pega dados ANTES (pode abrir prompt)
+  const form = getFormData();
+  if (!ensureNameEmail(form)) return;
+
+  // ✅ abre a aba AGORA (clique direto) -> não é bloqueado
+  const checkoutWin = window.open("about:blank", "_blank", "noopener,noreferrer");
+  if (!checkoutWin) {
+    alert("Seu navegador bloqueou a abertura do checkout. Permita pop-ups e tente novamente.");
+    return;
   }
 
-  async function iniciarCheckout(paymentMethod) {
+  // opcional: mensagem na aba em branco enquanto carrega
+  checkoutWin.document.write("<p style='font-family:Arial;padding:16px'>Abrindo checkout do Mercado Pago...</p>");
+
+  try {
+    setButtonsDisabled(true);
+
+    // aviso de adblock sem quebrar fluxo
     await verificarBloqueioMPUmaVez();
 
-    const form = getFormData();
-    if (!ensureNameEmail(form)) return;
+    const data = await criarCheckout({
+      ...form,
+      paymentMethod,
+    });
 
-    try {
-      // trava botões durante a chamada
-      setButtonsDisabled(true);
-
-      const data = await criarCheckout({
-        ...form,
-        paymentMethod,
-      });
-
-      // se já comprou, manda direto pro download
-      if (data?.alreadyPurchased && data?.redirectTo) {
-        window.location.href = data.redirectTo;
-        return;
-      }
-
-      if (!data?.initPoint) throw new Error("Checkout sem initPoint. Verifique logs.");
-
-      abrirCheckout(data.initPoint);
-    } catch (err) {
-      console.error(err);
-      alert(err?.message || "Erro ao iniciar pagamento. Tente novamente.");
-    } finally {
-      setButtonsDisabled(false);
+    // se já comprou, fecha a aba e manda pro download
+    if (data?.alreadyPurchased && data?.redirectTo) {
+      try { checkoutWin.close(); } catch {}
+      window.location.href = data.redirectTo;
+      return;
     }
+
+    if (!data?.initPoint) throw new Error("Checkout sem initPoint. Verifique /api/create-checkout.");
+
+    // ✅ redireciona a aba que já foi aberta
+    abrirCheckout(checkoutWin, data.initPoint);
+  } catch (err) {
+    try { checkoutWin.close(); } catch {}
+    console.error(err);
+    alert(err?.message || "Erro ao iniciar pagamento. Tente novamente.");
+  } finally {
+    setButtonsDisabled(false);
   }
+}
 
   function setButtonsDisabled(disabled) {
     const ids = ["pay-pix", "pay-pix-secondary", "pay-card", "pay-card-final"];
