@@ -1,20 +1,27 @@
 // /api/create-checkout.js
-import mercadopago from 'mercadopago';
-import { supabaseAdmin } from '../lib/supabaseAdmin.js';
+import mercadopago from "mercadopago";
+import { supabaseAdmin } from "../lib/supabaseAdmin.js";
 
-// ⚙️ Credenciais
-const accessToken = process.env.MP_ACCESS_TOKEN;
-const notificationUrl = process.env.MP_NOTIFICATION_URL;
+// ==========================
+// Config Mercado Pago
+// ==========================
+const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
+const MP_NOTIFICATION_URL = process.env.MP_NOTIFICATION_URL;
 
-if (!accessToken) {
-  console.error('MP_ACCESS_TOKEN não configurado na Vercel!');
-} else {
-  mercadopago.configure({ access_token: accessToken });
+if (!MP_ACCESS_TOKEN) {
+  console.error("❌ MP_ACCESS_TOKEN não configurado");
 }
 
+mercadopago.configure({
+  access_token: MP_ACCESS_TOKEN,
+});
+
+// ==========================
+// Handler
+// ==========================
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Método não permitido' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Método não permitido" });
   }
 
   try {
@@ -22,228 +29,129 @@ export default async function handler(req, res) {
 
     if (!name || !email) {
       return res.status(400).json({
-        step: 'validation',
-        error: 'Nome e e-mail são obrigatórios.',
+        error: "Nome e e-mail são obrigatórios",
       });
     }
 
-    const method = paymentMethod === 'pix' ? 'pix' : 'card';
-    const isPix = method === 'pix';
+    const cleanEmail = String(email).trim().toLowerCase();
+    const method = paymentMethod === "pix" ? "pix" : "card";
 
-    // 🔗 URL base da página de download (NUNCA liberar só com email)
-    const baseDownloadUrl = 'https://octopusaxisebook.com/download.html';
-    const homeUrl = 'https://octopusaxisebook.com';
+    // ==========================
+    // 1️⃣ Cria pedido no Supabase
+    // ==========================
+    const { data: order, error: insertError } = await supabaseAdmin
+      .from("ebook_order")
+      .insert({
+        name,
+        email: cleanEmail,
+        status: "pending",
+        download_allowed: false,
+        mp_status: "init",
+      })
+      .select("id")
+      .single();
 
-    // ---------------------------------------------------------
-    // 0) Anti-duplicação por e-mail
-    // ---------------------------------------------------------
-
-    // A) Se já comprou (download liberado), não cria checkout de novo
-    const { data: alreadyRows, error: alreadyErr } = await supabaseAdmin
-      .from('ebook_order')
-      .select('id')
-      .eq('email', email)
-      .eq('download_allowed', true)
-      .order('id', { ascending: false })
-      .limit(1);
-
-    if (alreadyErr) {
-      console.error('Erro Supabase ao checar alreadyPurchased:', alreadyErr);
+    if (insertError || !order?.id) {
+      console.error("❌ Erro ao criar pedido:", insertError);
       return res.status(500).json({
-        step: 'supabase-check-already',
-        error: 'Erro ao verificar compra existente.',
+        error: "Erro ao criar pedido no sistema",
       });
     }
 
-    if (alreadyRows && alreadyRows.length > 0) {
-      const paidOrderId = alreadyRows[0].id;
+    const orderId = order.id;
 
-      return res.status(200).json({
-        alreadyPurchased: true,
-        redirectTo:
-          baseDownloadUrl +
-          '?email=' +
-          encodeURIComponent(email) +
-          '&orderId=' +
-          encodeURIComponent(String(paidOrderId)),
-      });
-    }
-
-    // B) Se já existe pending para esse e-mail, reutiliza o pedido (evita duplicar)
-    const { data: pendingRows, error: pendingErr } = await supabaseAdmin
-      .from('ebook_order')
-      .select('id')
-      .eq('email', email)
-      .eq('download_allowed', false)
-      .eq('status', 'pending')
-      .order('id', { ascending: false })
-      .limit(1);
-
-    if (pendingErr) {
-      console.error('Erro Supabase ao checar pending existente:', pendingErr);
-      return res.status(500).json({
-        step: 'supabase-check-pending',
-        error: 'Erro ao verificar pedido pendente existente.',
-      });
-    }
-
-    let orderId;
-
-    if (pendingRows && pendingRows.length > 0) {
-      orderId = pendingRows[0].id;
-    } else {
-      // 1) CRIA LINHA NO SUPABASE (ebook_order) só quando não existe pending
-      const { data: order, error: supaInsertError } = await supabaseAdmin
-        .from('ebook_order')
-        .insert({
-          name,
-          email,
-          status: 'pending',
-          download_allowed: false,
-          mp_status: 'init',
-        })
-        .select('id')
-        .single();
-
-      if (supaInsertError) {
-        console.error(
-          'Erro Supabase ao inserir pedido:',
-          JSON.stringify(supaInsertError, null, 2)
-        );
-
-        return res.status(500).json({
-          step: 'supabase-insert',
-          error: 'Erro ao registrar pedido no Supabase.',
-          details: supaInsertError.message || supaInsertError,
-        });
-      }
-
-      orderId = order.id;
-    }
-
-    // ✅ Download URL SEMPRE com orderId (nunca só email)
+    // ==========================
+    // 2️⃣ URLs de retorno (CRÍTICO)
+    // ==========================
+    const baseDownloadUrl = "https://octopusaxisebook.com/download.html";
     const downloadUrl =
       baseDownloadUrl +
-      '?email=' +
-      encodeURIComponent(email) +
-      '&orderId=' +
-      encodeURIComponent(String(orderId));
+      "?email=" +
+      encodeURIComponent(cleanEmail) +
+      "&orderId=" +
+      encodeURIComponent(orderId);
 
-    // ---------------------------------------------------------
-    // 2) MONTA PREFERENCE DO MERCADO PAGO
-    // ---------------------------------------------------------
-    const paymentMethods = isPix
-      ? {
-          default_payment_method_id: 'pix',
-          excluded_payment_types: [{ id: 'ticket' }], // tira boleto
-        }
-      : {
-          excluded_payment_types: [{ id: 'ticket' }],
-          excluded_payment_methods: [{ id: 'pix' }], // remove pix no cartão
-        };
+    // ==========================
+    // 3️⃣ Preferência MP
+    // ==========================
+    const preference = {
+      external_reference: String(orderId), // 🔑 liga MP ↔ Supabase
+      notification_url: MP_NOTIFICATION_URL,
 
-    const preferenceData = {
-      external_reference: String(orderId), // casa com a coluna id da tabela
-      auto_return: 'approved',
       back_urls: {
         success: downloadUrl,
         pending: downloadUrl,
-        // não manda para download em failure
-        failure: homeUrl + '?pay=failure',
+        failure: downloadUrl,
       },
+
+      auto_return: "approved",
+
       items: [
         {
-          id: 'ebook-musica-ansiedade',
-          title: 'E-book Música & Ansiedade',
-          description: 'E-book da série Música & Medicina',
+          id: "ebook-musica-ansiedade",
+          title: "E-book Música & Ansiedade",
+          description: "Série Música & Medicina",
           quantity: 1,
           unit_price: 129,
-          currency_id: 'BRL',
-          category_id: 'ebooks',
+          currency_id: "BRL",
         },
       ],
-      payer: { name, email },
-      notification_url: notificationUrl || undefined,
-      payment_methods: paymentMethods,
+
+      payer: {
+        name,
+        email: cleanEmail,
+      },
+
+      payment_methods:
+        method === "pix"
+          ? {
+              default_payment_method_id: "pix",
+              excluded_payment_types: [{ id: "ticket" }],
+            }
+          : {
+              excluded_payment_types: [{ id: "ticket" }],
+              excluded_payment_methods: [{ id: "pix" }],
+            },
     };
 
-    // ---------------------------------------------------------
-    // 3) CRIA PREFERENCE NO MERCADO PAGO
-    // ---------------------------------------------------------
-    let preference;
-    try {
-      preference = await mercadopago.preferences.create(preferenceData);
-    } catch (mpErr) {
-      if (mpErr?.response) {
-        console.error(
-          'Erro Mercado Pago (preferences.create): status',
-          mpErr.response.status,
-          'body',
-          JSON.stringify(mpErr.response.body, null, 2)
-        );
-      } else {
-        console.error('Erro Mercado Pago (preferences.create):', mpErr);
-      }
+    // ==========================
+    // 4️⃣ Cria checkout MP
+    // ==========================
+    const mpResponse = await mercadopago.preferences.create(preference);
 
-      return res.status(500).json({
-        step: 'mp-preference',
-        error: 'Erro ao criar preferência no Mercado Pago.',
-        details: mpErr?.response?.body || mpErr?.message || String(mpErr),
-      });
-    }
-
-    const initPoint = preference?.body?.init_point;
-    const prefId = preference?.body?.id;
+    const initPoint = mpResponse?.body?.init_point;
+    const prefId = mpResponse?.body?.id;
 
     if (!initPoint || !prefId) {
-      console.error(
-        'Resposta inesperada do Mercado Pago:',
-        JSON.stringify(preference?.body || preference, null, 2)
-      );
+      console.error("❌ Resposta inválida do MP:", mpResponse?.body);
       return res.status(500).json({
-        step: 'mp-preference',
-        error: 'Resposta inesperada do Mercado Pago ao criar preferência.',
+        error: "Erro ao criar checkout no Mercado Pago",
       });
     }
 
-    // ---------------------------------------------------------
-    // 4) Atualiza pedido com dados da preference (debug)
-    // ---------------------------------------------------------
-    const { error: supaUpdateError } = await supabaseAdmin
-      .from('ebook_order')
+    // ==========================
+    // 5️⃣ Atualiza pedido
+    // ==========================
+    await supabaseAdmin
+      .from("ebook_order")
       .update({
         mp_external_reference: String(orderId),
-        mp_preference_id: String(prefId), // mantenha só se a coluna existir
-        mp_raw: preference.body,
+        mp_preference_id: String(prefId),
+        mp_raw: mpResponse.body,
       })
-      .eq('id', orderId);
+      .eq("id", orderId);
 
-    if (supaUpdateError) {
-      console.error(
-        'Erro ao atualizar pedido com dados da preferência:',
-        JSON.stringify(supaUpdateError, null, 2)
-      );
-      // não bloqueia o fluxo
-    }
-
-    // ---------------------------------------------------------
-    // 5) RESPONDE PARA O FRONT
-    // ---------------------------------------------------------
+    // ==========================
+    // 6️⃣ Retorno para o front
+    // ==========================
     return res.status(200).json({
       initPoint,
-      preferenceId: prefId,
       orderId,
-      name,
-      email,
-      method,
     });
   } catch (err) {
-    console.error('Erro interno em /api/create-checkout:', err);
-
+    console.error("🔥 Erro interno create-checkout:", err);
     return res.status(500).json({
-      step: 'unknown',
-      error: 'Erro interno ao criar checkout.',
-      details: err?.message || String(err),
+      error: "Erro interno ao iniciar checkout",
     });
   }
 }

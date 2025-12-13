@@ -1,125 +1,93 @@
 // /api/mp-webhook.js
 import mercadopago from "mercadopago";
 import { supabaseAdmin } from "../lib/supabaseAdmin.js";
-import { log, warn, error } from "../lib/logger.js";
 
-const accessToken = process.env.MP_ACCESS_TOKEN;
+// ==========================
+// Config Mercado Pago
+// ==========================
+const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
 
-if (!accessToken) error("MP_ACCESS_TOKEN não configurado!");
-else mercadopago.configure({ access_token: accessToken });
-
-function getQueryParam(req, key) {
-  return req?.query?.[key] ?? req?.query?.[key.replace(".", "")];
+if (!MP_ACCESS_TOKEN) {
+  console.error("❌ MP_ACCESS_TOKEN não configurado");
 }
 
-export default async function handler(req, res) {
-  // MP pode dar GET de teste
-  if (req.method === "GET") return res.status(200).send("ok");
-  if (req.method !== "POST")
-    return res.status(405).json({ error: "Método não permitido" });
-
-  try {
-    const body = req.body || {};
-    const query = req.query || {};
-
-   // Logs essenciais (sem vazar payload)
-   log("[MP WEBHOOK] method:", req.method);
-   log("[MP WEBHOOK] event:", {
-     topic: body?.type || body?.topic || query?.type || query?.topic || null,
-     hasDataId: !!(body?.data?.id || query?.["data.id"] || query?.id),
+mercadopago.configure({
+  access_token: MP_ACCESS_TOKEN,
 });
 
+// ==========================
+// Handler
+// ==========================
+export default async function handler(req, res) {
+  try {
+    // MP pode enviar GET ou POST
+    const topic =
+      req.query?.topic ||
+      req.body?.type ||
+      (req.body?.resource?.includes("payment") ? "payment" : null);
 
-    const topic = body.type || body.topic || query.type || query.topic;
+    const paymentId =
+      req.query?.id ||
+      req.body?.data?.id ||
+      req.body?.id;
 
-    // MP às vezes manda o id assim: ?data.id=123
-    const dataIdFromBody = body?.data?.id;
-    const dataIdFromQuery =
-      getQueryParam(req, "data.id") || query["data.id"] || query.id;
-
-    const dataId = dataIdFromBody || dataIdFromQuery;
-
-    let paymentId = null;
-
-    // Caso: payment
-    if (topic === "payment" && dataId) {
-      paymentId = dataId;
+    // Se não for pagamento, ignora
+    if (topic !== "payment" || !paymentId) {
+      return res.status(200).json({ ok: true });
     }
 
-    // Caso: merchant_order (muito comum em cartão)
-    if (!paymentId && topic === "merchant_order" && dataId) {
-      const mo = await mercadopago.merchant_orders.findById(dataId);
-      const payments = mo?.body?.payments || [];
-      if (payments.length) paymentId = payments[payments.length - 1].id;
+    // ==========================
+    // 1️⃣ Busca pagamento no MP
+    // ==========================
+    const payment = await mercadopago.payment.findById(paymentId);
+    const data = payment?.body;
+
+    if (!data) {
+      console.error("❌ Pagamento não encontrado no MP:", paymentId);
+      return res.status(200).json({ ok: true });
     }
 
-    if (!paymentId) {
-      warn("[MP WEBHOOK] ignored: no-payment-id", { topic, dataId });
-      return res.status(200).json({
-        ignored: true,
-        reason: "no-payment-id",
-        topic,
-        dataId,
-      });
+    const mpStatus = data.status; // approved | pending | rejected
+    const orderId = data.external_reference;
+
+    if (!orderId) {
+      console.error("❌ Pagamento sem external_reference:", data);
+      return res.status(200).json({ ok: true });
     }
 
-    // Busca pagamento completo
-    const payResp = await mercadopago.payment.findById(paymentId);
-    const payment = payResp?.body;
+    const isApproved = mpStatus === "approved";
 
-    if (!payment) {
-      console.log("[MP WEBHOOK] ignored: payment-not-found", { paymentId });
-      return res.status(200).json({
-        ignored: true,
-        reason: "payment-not-found",
-        paymentId,
-      });
-    }
-
-    const status = payment.status; // approved, pending, rejected...
-    const externalRef =
-      payment.external_reference || payment?.metadata?.order_id;
-
-    console.log("[MP WEBHOOK] payment:", {
-      paymentId,
-      status,
-      external_reference: externalRef,
-      payment_method_id: payment.payment_method_id,
-    });
-
-    if (!externalRef) {
-      console.error("[MP WEBHOOK] sem external_reference — não dá pra casar pedido");
-      return res.status(200).json({
-        ignored: true,
-        reason: "no-external-reference",
-        paymentId,
-        status,
-      });
-    }
-
-    // Atualiza pedido (fala o MESMO idioma do seu create-checkout.js)
-    const updateData = {
-      status: status === "approved" ? "approved" : "pending",
-      mp_status: status,
-      download_allowed: status === "approved",
-      // se você NÃO tiver essas colunas, pode remover:
-      // mp_payment_id: String(paymentId),
-    };
-
+    // ==========================
+    // 2️⃣ Atualiza pedido no Supabase
+    // ==========================
     const { error } = await supabaseAdmin
       .from("ebook_order")
-      .update(updateData)
-      .eq("id", String(externalRef));
+      .update({
+        status: isApproved ? "approved" : "pending",
+        mp_status: mpStatus,
+        mp_payment_id: String(paymentId),
+        download_allowed: isApproved,
+        mp_raw: data,
+      })
+      .eq("id", String(orderId));
 
     if (error) {
-      error("[MP WEBHOOK] Supabase update error:", error);
-      return res.status(200).json({ ok: false, supabase_error: true });
+      console.error("❌ Erro ao atualizar pedido:", error);
+    } else {
+      console.log("✅ Webhook MP aplicado:", {
+        orderId,
+        mpStatus,
+        download_allowed: isApproved,
+      });
     }
 
+    // ==========================
+    // 3️⃣ Resposta obrigatória
+    // ==========================
     return res.status(200).json({ ok: true });
   } catch (err) {
-    error("[MP WEBHOOK] erro geral:", err);
-    // 200 pra evitar tempestade de retry do MP
-    return res.status(200).json({ ok: false });
+    console.error("🔥 Erro no mp-webhook:", err);
+    // SEMPRE 200 para o MP
+    return res.status(200).json({ ok: true });
   }
 }

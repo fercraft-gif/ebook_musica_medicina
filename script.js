@@ -113,54 +113,62 @@ function ensureNameEmail({ name, email }) {
     return data;
   }
 
-function abrirCheckout(win, initPoint) {
-  try {
-    win.location.href = initPoint;
-  } catch (e) {
-    // fallback (raríssimo)
-    window.location.href = initPoint;
+function abrirCheckout(initPoint, popupRef) {
+  // Se a aba já foi aberta no clique, só redireciona ela (não é bloqueado)
+  if (popupRef && !popupRef.closed) {
+    try {
+      popupRef.location.href = initPoint;
+      return;
+    } catch (e) {
+      // se der erro por qualquer motivo, cai no fallback abaixo
+    }
   }
+
+  // Fallback 100% confiável: abre na mesma aba (não depende de pop-up)
+  window.location.href = initPoint;
 }
 
  async function iniciarCheckout(paymentMethod) {
-  // pega dados ANTES (pode abrir prompt)
+  await verificarBloqueioMPUmaVez();
+
   const form = getFormData();
   if (!ensureNameEmail(form)) return;
 
-  // ✅ abre a aba AGORA (clique direto) -> não é bloqueado
-  const checkoutWin = window.open("about:blank", "_blank", "noopener,noreferrer");
-  if (!checkoutWin) {
-    alert("Seu navegador bloqueou a abertura do checkout. Permita pop-ups e tente novamente.");
-    return;
-  }
+  // ✅ ABRE O POPUP IMEDIATAMENTE NO CLIQUE (antes de qualquer await)
+  // Isso evita bloqueio do navegador.
+  const popupRef = window.open("about:blank", "_blank", "noopener,noreferrer");
 
-  // opcional: mensagem na aba em branco enquanto carrega
-  checkoutWin.document.write("<p style='font-family:Arial;padding:16px'>Abrindo checkout do Mercado Pago...</p>");
+  // Se o navegador bloqueou mesmo assim, a gente segue e abre na mesma aba no final.
+  if (popupRef) {
+    try {
+      popupRef.document.title = "Abrindo checkout…";
+    } catch {}
+  }
 
   try {
     setButtonsDisabled(true);
-
-    // aviso de adblock sem quebrar fluxo
-    await verificarBloqueioMPUmaVez();
 
     const data = await criarCheckout({
       ...form,
       paymentMethod,
     });
 
-    // se já comprou, fecha a aba e manda pro download
+    // Se já comprou, vai pro download (como estava)
     if (data?.alreadyPurchased && data?.redirectTo) {
-      try { checkoutWin.close(); } catch {}
+      if (popupRef && !popupRef.closed) popupRef.close();
       window.location.href = data.redirectTo;
       return;
     }
 
-    if (!data?.initPoint) throw new Error("Checkout sem initPoint. Verifique /api/create-checkout.");
+    if (!data?.initPoint) throw new Error("Checkout sem initPoint. Verifique logs.");
 
-    // ✅ redireciona a aba que já foi aberta
-    abrirCheckout(checkoutWin, data.initPoint);
+    // ✅ Redireciona o popup (se existir) OU abre na mesma aba (fallback)
+    abrirCheckout(data.initPoint, popupRef);
   } catch (err) {
-    try { checkoutWin.close(); } catch {}
+    // Se deu erro, fecha a aba vazia (se abriu)
+    if (popupRef && !popupRef.closed) {
+      try { popupRef.close(); } catch {}
+    }
     console.error(err);
     alert(err?.message || "Erro ao iniciar pagamento. Tente novamente.");
   } finally {
